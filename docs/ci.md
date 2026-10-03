@@ -1,6 +1,6 @@
-# Foundation CI
+# Repository and Auth database CI
 
-FOUNDATION-03 adds only GitHub Actions repository and local-database verification. It does not deploy, change branch protection, resolve product questions, or authorize a later Foundation task.
+FOUNDATION-03 established GitHub Actions repository/local-database verification. AUTH-01 makes the explicitly approved first-product-schema transition below, preserving Foundation history and its Docker isolation/cleanup. Neither task deploys or changes branch protection.
 
 ## Triggers and checks
 
@@ -9,7 +9,7 @@ FOUNDATION-03 adds only GitHub Actions repository and local-database verificatio
 Both jobs run on `ubuntu-24.04`, with a 20-minute timeout, Node **24.19.0** and npm **11.9.0**, and a clean `npm ci`. Actions are immutable commit pins: checkout `3d3c42e5aac5ba805825da76410c181273ba90b1` and setup-node `820762786026740c76f36085b0efc47a31fe5020`. Changes to these pins require review.
 
 - **repository-quality:** verifies the installed dependency tree with `npm ls --all`, validates and generates Prisma, then runs the existing aggregate `npm run check` (lint, typechecks, builds, smoke and database-baseline tests), requires `npm audit --omit=dev` to succeed with exactly zero vulnerabilities, and checks tracked checkout hygiene.
-- **local-database:** validates Compose and Prisma, generates the zero-model client, verifies a fresh QA namespace, starts the existing PostgreSQL Compose service, checks health/loopback exposure/volume ownership, runs the real read-only Prisma `SELECT 1` and empty-catalog check, verifies unconfirmed reset refusal, and proves down/up persistence using the exact volume creation time and PostgreSQL cluster system identifier. It always attempts the canonical scoped reset after an eligible startup, then verifies no matching resources remain.
+- **local-database:** validates Compose/Prisma, generates the AUTH-01 client, verifies a fresh QA namespace, starts existing PostgreSQL, checks health/loopback/volume ownership and the cluster identifier, then proves zero non-system relations with the read-only empty preflight. It deploys the committed migration with `prisma migrate deploy`, verifies the exact ten-table schema plus `_prisma_migrations`, snapshots columns/constraints/indexes/history, replays deploy and compares the snapshot unchanged. Actual compiled repositories are exercised through 15 disposable PostgreSQL invariant/concurrency checks. It retains reset refusal, exact-volume/cluster normal down/up persistence and post-restart schema/snapshot checks. It always attempts eligible scoped cleanup and fails if any matching resources remain. A second isolated cluster in the same proven-owned disposable namespace independently proves retained-empty down/up before migration, then deploy/replay/migrated-restart verification. The two check names remain unchanged. No `db push` is used.
 
 Full development audit is not a CI gate and is not run as a separate CI step. It remains explicit debt in [project-state.md](project-state.md), including the braces, deepmerge-ts and mysql2 advisories and the differing historical cloud/Windows transitive counts. To inspect it locally, run `npm audit`; a nonzero result must be reported, not suppressed or automatically fixed. Runtime audit success is not a claim of complete dependency security.
 
@@ -31,9 +31,9 @@ GitHub runner loss, hard job timeout, or manual force cancellation can still pre
 
 The workflow has only `contents: read` token permission; checkout does not persist credentials. Setup-node package-manager caching is explicitly disabled. There are no repository secrets, deployment credentials, artifact uploads, writable repository token grants, `pull_request_target`, or branch-protection changes. PR source executes in a disposable hosted runner with the stated read-only token boundary. No untrusted PR title, body or branch name is interpolated into shell commands.
 
-Docker/PostgreSQL/Prisma source tooling, package files and lockfile remain unchanged. No product model, migration, seed, provider, Meilisearch service or deployment is included.
+Docker/PostgreSQL lifecycle source, reset confirmation parsing, ownership guards, image and action pins remain unchanged. AUTH-01 adds only the authorized ten-model migration, internal services and checks. Prisma client/adapter/driver are runtime dependencies; the same CLI version is isolated with a development npm alias, documented in [ADR-0001](decisions/ADR-0001-auth-security-persistence.md). No seed, provider, Meilisearch or deployment is included.
 
-## Acceptance and completion sequence
+## Preserved historical FOUNDATION-03 acceptance and completion sequence
 
 1. Implement and independently review only the approved CI/docs scope on `foundation-03-ci-basics`; perform available offline checks.
 2. Publish the branch and open a **draft** PR to `main`. Capture real `pull_request` workflow run URL/ID, tested SHA and both job results. Local YAML lint and shell checks do not prove GitHub service execution.
@@ -44,3 +44,9 @@ Docker/PostgreSQL/Prisma source tooling, package files and lockfile remain uncha
 7. No merge or FOUNDATION-04 is authorized by successful checks.
 
 For local parity, run `npm ci`, `npm run check`, `npm audit --omit=dev`, `npm run prisma:validate`, `npm run prisma:generate`, and `git diff --check`. In an authorized Docker environment, follow [the local database guide](../infra/README.md). The CI workflow itself is the exact automation contract.
+
+## AUTH-01 acceptance
+
+Foundation was accepted complete on main 58176c267d1fca2f5220df65dc37e25b53c560d4, run [37147650133](https://github.com/AliGolafzani/Rahrow/actions/runs/37147650133). Historical Foundation evidence above remains unchanged.
+
+AUTH-01 requires local aggregate checks, independent review, and then actual PR-triggered repository-quality and local-database jobs on the published exact SHA. Docker-less authoring checks do not prove migration or concurrency. The PR remains draft; success is not merge authorization. The write-test runner additionally requires CI=true, GITHUB_ACTIONS=true, an exact isolated QA namespace and RAHROW_AUTH_DATABASE_TESTS=disposable-local-ci. Its fixtures remain confined to the newly owned database until canonical cleanup.

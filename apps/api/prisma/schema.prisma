@@ -1,11 +1,143 @@
-// FOUNDATION-02 is tooling only. Product models and migrations are not authorized.
+// AUTH-01: only the approved Auth/User/RBAC/Audit foundation.
 generator client {
   provider            = "prisma-client"
-  output              = "../generated/prisma"
+  output              = "../src/generated/prisma"
   moduleFormat        = "esm"
   importFileExtension = "ts"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// Technical assurance evidence, never inferred from a role or credential record.
+enum AuthenticationMethod {
+  MOBILE_OTP
+  ADMIN_PASSWORD_TOTP
+}
+
+model User {
+  id              String           @id @default(uuid()) @db.Uuid
+  mobile          String           @unique @db.VarChar(16)
+  email           String?          @db.VarChar(254)
+  firstName       String?          @db.VarChar(100)
+  lastName        String?          @db.VarChar(100)
+  birthDate       DateTime?        @db.Date
+  displayName     String?          @db.VarChar(200)
+  avatar          String?          @db.VarChar(2048)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  userRoles       UserRole[]
+  adminCredential AdminCredential?
+  sessions        AuthSession[]
+  auditLogs       AuditLog[]
+  // PRD status intentionally omitted pending OQ-14D, with no access default.
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.Uuid
+  key         String           @unique @db.VarChar(100)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @db.Timestamptz(3)
+  userRoles   UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id        String           @id @default(uuid()) @db.Uuid
+  key       String           @unique @db.VarChar(100)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @db.Timestamptz(3)
+  roles     RolePermission[]
+}
+
+model UserRole {
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AdminCredential {
+  userId               String   @id @db.Uuid
+  passwordHash         String   @db.VarChar(512)
+  totpCiphertext       Bytes
+  totpNonce            Bytes
+  totpAuthenticationTag Bytes
+  totpKeyVersion       String   @db.VarChar(64)
+  lastAcceptedTotpStep BigInt?
+  createdAt            DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model AuthSession {
+  id                   String               @id @default(uuid()) @db.Uuid
+  userId               String               @db.Uuid
+  tokenDigest          String               @unique @db.Char(64)
+  authenticationMethod AuthenticationMethod
+  createdAt            DateTime             @default(now()) @db.Timestamptz(3)
+  expiresAt            DateTime             @db.Timestamptz(3)
+  revokedAt            DateTime?            @db.Timestamptz(3)
+  rotatedFromId        String?              @unique @db.Uuid
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  rotatedFrom          AuthSession?         @relation("SessionRotation", fields: [rotatedFromId], references: [id], onDelete: Restrict)
+  rotatedTo            AuthSession?         @relation("SessionRotation")
+
+  @@index([userId, expiresAt])
+}
+
+model OtpChallenge {
+  id             String    @id @default(uuid()) @db.Uuid
+  targetDigest   String    @db.Char(64)
+  codeMac        String    @db.Char(64)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  expiresAt      DateTime  @db.Timestamptz(3)
+  failedAttempts Int       @default(0)
+  attemptLimit   Int
+  consumedAt     DateTime? @db.Timestamptz(3)
+
+  @@index([targetDigest, expiresAt])
+}
+
+model AuthRateLimitBucket {
+  bucketKey   String   @db.Char(64)
+  scope       String   @db.VarChar(32)
+  windowStart DateTime @db.Timestamptz(3)
+  count       Int
+  expiresAt   DateTime @db.Timestamptz(3)
+
+  @@id([bucketKey, scope, windowStart])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  actorId       String?  @db.Uuid
+  action        String   @db.VarChar(64)
+  entityType    String   @db.VarChar(32)
+  entityId      String   @db.VarChar(128)
+  beforeSummary Json?
+  afterSummary  Json?
+  correlationId String?  @db.Uuid
+  occurredAt    DateTime @default(now()) @db.Timestamptz(3)
+  actor         User?    @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, occurredAt])
+  @@index([actorId, occurredAt])
 }

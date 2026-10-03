@@ -1,6 +1,6 @@
 # Product open questions
 
-This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner and decides these questions. No question is resolved by this scaffold. All 25 entries below are OPEN.
+This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner and decides these questions. No question is resolved by this scaffold. All 26 entries below are OPEN.
 
 Use exactly `OPEN`, `DECIDED`, or `SUPERSEDED` for Status. Keep IDs stable. Record Ali’s actual decision, its date, and source when decided; preserve history and reference a replacement when superseded. Do not infer an answer from examples, planned architecture, an ADR, or silence.
 
@@ -324,3 +324,15 @@ PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-pro
 - **Decision:** Not decided.
 - **Decision date:** Not set.
 - **Source:** Accepted requirement-classification report, OQ-18D; PRD §9 and §17.
+
+### OQ-14D User account status lifecycle
+
+- **ID:** OQ-14D
+- **Area:** User account status
+- **Question:** What does User.status mean, which values and transitions are valid, who may perform them, and what account-access effects follow?
+- **Affected scope:** Only the status column/lifecycle and dependent access behavior. AUTH-01 intentionally omits the column, any default and status-dependent behavior; unrelated Auth/User/RBAC foundations continue. The PRD requires the concept eventually.
+- **Owner:** Ali (Product Owner)
+- **Status:** OPEN
+- **Decision:** Not decided.
+- **Decision date:** Not set.
+- **Source:** PRD §14; Ali's AUTH-01 plan approval and binding refinement 1, 2026-10-03. Related: OQ-14A.

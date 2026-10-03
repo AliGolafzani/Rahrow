@@ -130,7 +130,20 @@ jobs:
           docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()' > "$RUNNER_TEMP/cluster-id"
           grep -Eq '^[0-9]+$' "$RUNNER_TEMP/cluster-id"
           docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SHOW server_version'
-      - run: npm run db:check
+      - name: Prove empty Foundation database before migration
+        run: npm run db:check:empty
+      - name: Apply only the committed AUTH-01 migration
+        run: npm run db:migrate
+      - name: Verify exact AUTH-01 schema and snapshot migration history
+        run: node apps/api/scripts/check-database.ts --write-snapshot "$RUNNER_TEMP/auth-migration-snapshot.json"
+      - name: Prove migrate deploy replay is a no-op
+        run: |
+          npm run db:migrate
+          node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/auth-migration-snapshot.json"
+      - name: Check real database invariants and concurrent authentication state
+        env:
+          RAHROW_AUTH_DATABASE_TESTS: disposable-local-ci
+        run: npm run test:auth:db
       - name: Prove unconfirmed reset refuses without removing resources
         run: |
           if npm run db:reset; then
@@ -156,7 +169,45 @@ jobs:
           test "$(docker inspect "$id" --format '{{.State.Health.Status}}')" = healthy
           current="$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')"
           test "$current" = "$(cat "$RUNNER_TEMP/cluster-id")"
-          npm run db:check
+          node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/auth-migration-snapshot.json"
+      - name: Independently verify retained-empty Foundation migration path
+        run: |
+          # The direct-fresh path above completed. Reuse only this proven-owned disposable namespace.
+          node scripts/db-local.mjs reset --confirm-local-reset
+          containers="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          networks="$(docker network ls -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          test -z "$containers$networks"
+          volumes="$(docker volume ls -q)"
+          if grep -Fxq "${RAHROW_LOCAL_PROJECT}_postgres-data" <<< "$volumes"; then exit 1; fi
+          npm run db:up
+          npm run db:check:empty
+          id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
+          test -n "$id" && [[ "$id" != *$'\n'* ]]
+          test "$(docker inspect "$id" --format '{{.State.Health.Status}}')" = healthy
+          cluster="$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')"
+          [[ "$cluster" =~ ^[0-9]+$ ]]
+          created="$(docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" --format '{{.CreatedAt}}')"
+          # Retain an empty Foundation cluster before applying the migration.
+          npm run db:down
+          test "$(docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" --format '{{.CreatedAt}}')" = "$created"
+          npm run db:up
+          id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
+          test -n "$id" && [[ "$id" != *$'\n'* ]]
+          test "$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')" = "$cluster"
+          npm run db:check:empty
+          npm run db:migrate
+          node apps/api/scripts/check-database.ts --write-snapshot "$RUNNER_TEMP/retained-empty-auth-snapshot.json"
+          npm run db:migrate
+          node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/retained-empty-auth-snapshot.json"
+          # The migrated retained-empty cluster must also survive a restart unchanged.
+          npm run db:down
+          test "$(docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" --format '{{.CreatedAt}}')" = "$created"
+          npm run db:up
+          id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
+          test -n "$id" && [[ "$id" != *$'\n'* ]]
+          test "$(docker inspect "$id" --format '{{.State.Health.Status}}')" = healthy
+          test "$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')" = "$cluster"
+          node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/retained-empty-auth-snapshot.json"
       - name: Always reset only this eligible local QA project
         if: ${{ always() && steps.isolation.outputs.cleanup_eligible == 'true' }}
         run: |

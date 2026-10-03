@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { defineConfig } from 'prisma/config';
+import { defineConfig } from 'prisma-cli/config';
 import { getLocalDatabaseUrl, loadLocalEnvironment } from './scripts/local-database.ts';
 
 loadLocalEnvironment();

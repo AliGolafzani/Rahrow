@@ -2,7 +2,8 @@
   "extends": "@rahrow/config/tsconfig/nest.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true
   },
   "include": [
     "src/**/*.ts"

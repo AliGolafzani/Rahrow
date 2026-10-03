@@ -1,21 +1,21 @@
 # Rahrow
 
-FOUNDATION-01 is the published repository and application skeleton for the approved API-first modular-monolith architecture. FOUNDATION-02 adds a local-only PostgreSQL and zero-model Prisma tooling baseline. The neutral Next.js page and empty NestJS application still implement no product behavior. See [project state](docs/project-state.md) for verification status; configuration and tooling checks alone do not prove database runtime readiness.
+Foundation is complete. AUTH-01 adds the first bounded Auth/User/RBAC/Audit data and internal service foundation to the approved API-first modular monolith. No authentication endpoints or frontend flows are exposed. See [project state](docs/project-state.md) for verification status; configuration and tooling checks alone do not prove database runtime readiness.
 
 Read [AGENTS.md](AGENTS.md) and [project state](docs/project-state.md) before contributing. The private PRD is not distributed in this repository; obtain the relevant requirements before dependent work. [Product questions](docs/open-questions.md) remain unresolved.
 
 ## Workspace layout
 
 - `apps/web`: Next.js 16 + TypeScript; one neutral placeholder page
-- `apps/api`: NestJS + TypeScript; empty application module plus separate, zero-model Prisma tooling
-- `packages/contracts`: independently compiled, intentionally empty shared-contract package
+- `apps/api`: NestJS + TypeScript; Auth/User/RBAC/Audit modules, lazy Prisma infrastructure and guarded database tooling
+- `packages/contracts`: independently compiled, type-only public-profile contract package
 - `packages/ui`: independently compiled, intentionally empty shared-UI package
 - `packages/config`: shared TypeScript presets and root-consumed ESLint configuration
 - `infra`: local-only PostgreSQL Compose configuration and lifecycle documentation
 - `docs`: existing governance and verified project state
 - `scripts`: built-application smoke checks and guarded local database lifecycle commands
 
-All packages are private npm workspaces. One root lockfile pins the dependency graph. There is no task orchestrator or sibling-app build dependency. The applications do not yet consume contracts or UI exports because those packages intentionally export nothing.
+All packages are private npm workspaces. One root lockfile pins the dependency graph. There is no task orchestrator or sibling-app build dependency. The API consumes a type-only public-profile contract; both shared packages still have no runtime exports.
 
 ## Prerequisites and installation
 
@@ -57,6 +57,8 @@ npm run db:up
 npm run db:status
 npm run prisma:validate
 npm run prisma:generate
+npm run db:check:empty # first migration only
+npm run db:migrate
 npm run db:check
 npm run db:down
 ```
@@ -65,14 +67,14 @@ The example credentials are public, development-only values. Never reuse them fo
 
 - `db:config` validates Compose quietly; it does not check a running database.
 - `db:up` starts only PostgreSQL and waits up to 90 seconds for health. `db:status` shows container state.
-- `prisma:validate` and `prisma:generate` validate/generate the empty schema offline. Prisma **7.10.0** supports zero-model generation by default; do not add a fake entity or pass the removed `--allow-no-models` flag.
-- `db:check` generates the client and uses Prisma's PostgreSQL adapter for a real, read-only `SELECT 1` and catalog check that no non-system relations exist. It accepts only the configured loopback database and creates no tables or migrations.
+- `prisma:validate` and `prisma:generate` validate/generate the authorized ten-model schema offline. Generated code is ignored.
+- `db:check:empty` proves the retained empty Foundation or fresh database before its first migration. `db:migrate` deploys committed versioned migrations. `db:check` checks connectivity, the exact AUTH-01 table allowlist and applied migration checksum read-only. They accept only the configured loopback development database.
 - `db:down` removes the local container/network but **retains the named PostgreSQL volume**.
 - **Destructive, local-only reset:** run `node scripts/db-local.mjs reset --confirm-local-reset` only when the selected project’s data is disposable. This direct Node command is canonical; Windows/npm 11.9.0 was observed consuming the flag through npm forwarding. Bare `npm run db:reset` intentionally refuses. The explicit confirmation and volume ownership/label checks remain required.
 
 The official `postgres:18.6-bookworm` image is patch/distribution pinned. PostgreSQL 18 stores data beneath `/var/lib/postgresql/18/docker`, so the named volume mounts `/var/lib/postgresql`. PostgreSQL is published only at `127.0.0.1`, with SCRAM host authentication. These are local development boundaries, not production topology or credential-management decisions. Docker tags can receive rebuilt layers; this is not an immutable digest pin.
 
-No model, product table, migration, seed, domain service, or application database connection is introduced. Prisma configuration uses v7 `prisma.config.ts` for the datasource URL and the `prisma-client` generator with explicit ignored output. Tooling loads the root environment explicitly. The generated client is neither committed nor connected to the NestJS app.
+The authorized ten-table schema and first migration are documented in [Auth foundation](docs/auth-foundation.md). Prisma configuration uses v7 prisma.config.ts. Tooling loads the root environment explicitly; runtime database configuration is supplied externally and the Nest client is lazy. No migrations run on startup and no seed is installed.
 
 See [local infrastructure instructions](infra/README.md) for clean-state QA, local-only data removal, troubleshooting, and version references.
 
@@ -97,12 +99,12 @@ npm run check
 ```
 
 - `lint`: direct ESLint CLI with zero warnings allowed; Next.js rules apply to the web app. Next 16 does not provide `next lint`.
-- `typecheck`: both empty shared packages and both applications. Web first runs `next typegen` so generated route declarations exist on a clean checkout.
+- `typecheck`: both shared packages and both applications. Web first runs `next typegen` so generated route declarations exist on a clean checkout.
 - `build`: compiles both shared packages, then builds both independent applications.
 - `test`: requires build outputs. Node's built-in test runner verifies database-tooling safety guards and empty workspace exports, starts the actual built API and web separately on ephemeral loopback ports, checks their expected HTTP responses, and stops the child processes. Offline tests do not substitute for `db:up`/`db:check` against Docker PostgreSQL.
 - `check`: lint, type checks, all builds, and smoke tests in that order.
 
-The smoke tests establish skeleton startup only. There are no product unit/integration, authorization, payment, concurrency, migration, accessibility-matrix, or release-readiness results yet. No CI workflow is configured in this task.
+Smoke tests establish built startup with no endpoints. AUTH-01 adds negative-heavy security/privacy/RBAC tests; the [CI workflow](docs/ci.md) separately exercises actual migration, constraints and concurrent state transitions in disposable PostgreSQL. These are no claim of complete auth flows or release readiness.
 
 Optional dependency inspection:
 
@@ -118,6 +120,6 @@ Next may update generated `next-env.d.ts` during type generation/build. Build di
 
 ## Deferred scope
 
-Meilisearch, S3-compatible storage, provider integration, staging/production infrastructure, CI, product models/migrations/seeds, and all product modules need separately bounded authorization. The local PostgreSQL/Prisma baseline does not resolve product questions, define product schemas, grant production approval, or claim completion of the Foundation milestone.
+Complete OTP/SMS/admin login, frontend auth, status lifecycle, profile-completion UX and the final permission matrix are deferred. Meilisearch, S3-compatible storage, other product modules and staging/production actions need separate authorization. AUTH-01 does not resolve product questions or grant production approval.
 
 Tooling references: [npm workspaces](https://docs.npmjs.com/cli/v11/using-npm/workspaces/), [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Next.js ESLint](https://nextjs.org/docs/app/api-reference/config/eslint), [NestJS migration requirements](https://docs.nestjs.com/migration-guide), [TypeScript 6](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html).

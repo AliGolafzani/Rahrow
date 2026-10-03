@@ -3,9 +3,17 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
-  "include": ["prisma.config.ts", "scripts/**/*.ts", "generated/prisma/**/*.ts"]
+  "include": [
+    "prisma.config.ts",
+    "scripts/**/*.ts",
+    "src/**/*.ts"
+  ]
 }
