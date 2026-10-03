@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { spawnSync } from 'node:child_process';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL, URL } from 'node:url';
+import process from 'node:process';
 import { assertOwnedVolume, isLocalDockerEndpoint, localProject, main, validateLocalEnvironment } from './db-local.mjs';
 
 const validEnv = {
@@ -62,4 +68,55 @@ test('reset rejects unnamed, unowned, differently scoped or mismatched volumes',
   for (const key of Object.keys(volume.Labels)) {
     assert.throws(() => assertOwnedVolume({ ...volume, Labels: { ...volume.Labels, [key]: 'other' } }, project));
   }
+});
+
+// Exercise the actual CLI entry point in an isolated fixture. The preloaded tripwire
+// records any attempted Docker spawn; no Docker executable or daemon is used.
+function resetCli(t, flags) {
+  const root = mkdtempSync(join(tmpdir(), 'rahrow-reset-cli-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'scripts'));
+  copyFileSync(new URL('./db-local.mjs', import.meta.url), join(root, 'scripts/db-local.mjs'));
+  writeFileSync(join(root, '.env'), 'POSTGRES_DB=production\n');
+  const marker = join(root, 'docker-called');
+  const preload = join(root, 'tripwire.mjs');
+  writeFileSync(preload, `
+    import childProcess from 'node:child_process';
+    import { writeFileSync } from 'node:fs';
+    import { syncBuiltinESMExports } from 'node:module';
+    childProcess.spawnSync = () => {
+      writeFileSync(${JSON.stringify(marker)}, 'unexpected Docker call');
+      throw new Error('Unexpected Docker call');
+    };
+    syncBuiltinESMExports();
+  `);
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (/^(POSTGRES_|DOCKER_|RAHROW_|NODE_OPTIONS$|npm_config_)/i.test(key)) delete env[key];
+  }
+  // Neither environment variables nor npm configuration can replace argv consent.
+  env.POSTGRES_USER = 'rahrow_local';
+  env.POSTGRES_DB = 'production';
+  env.CONFIRM_LOCAL_RESET = 'true';
+  env.npm_config_confirm_local_reset = 'true';
+  env.NODE_OPTIONS = `--import=${pathToFileURL(preload).href}`;
+  const result = spawnSync(process.execPath, ['scripts/db-local.mjs', 'reset', ...flags], {
+    cwd: root, env, encoding: 'utf8',
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 1);
+  assert.equal(existsSync(marker), false, 'must refuse before any Docker call');
+  return result.stderr;
+}
+
+test('direct reset CLI without confirmation refuses before environment validation or Docker', (t) => {
+  assert.match(resetCli(t, []), /DESTRUCTIVE LOCAL-ONLY:.*node scripts\/db-local\.mjs reset --confirm-local-reset/);
+});
+
+test('direct reset CLI with incorrect confirmation refuses before environment validation or Docker', (t) => {
+  assert.match(resetCli(t, ['--confirm-local-reset=true']), /Usage:/);
+});
+
+test('documented direct Node confirmation passes consent and still enforces local environment guards', (t) => {
+  assert.match(resetCli(t, ['--confirm-local-reset']), /POSTGRES_DB must use a local-only rahrow_local name/);
 });

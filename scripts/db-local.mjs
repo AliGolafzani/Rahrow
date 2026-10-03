@@ -100,7 +100,7 @@ export function main(args = process.argv.slice(2)) {
     throw new Error('Usage: node scripts/db-local.mjs config|up|down|status|reset [--confirm-local-reset]');
   }
   if (action === 'reset' && !flags.includes('--confirm-local-reset')) {
-    throw new Error('DESTRUCTIVE LOCAL-ONLY: reset removes this project’s PostgreSQL data. Repeat with --confirm-local-reset only if it is disposable.');
+    throw new Error('DESTRUCTIVE LOCAL-ONLY: reset removes this project’s PostgreSQL data. Only if it is disposable, run: node scripts/db-local.mjs reset --confirm-local-reset');
   }
   let fromFile;
   try {

@@ -68,6 +68,7 @@ The example credentials are public, development-only values. Never reuse them fo
 - `prisma:validate` and `prisma:generate` validate/generate the empty schema offline. Prisma **7.10.0** supports zero-model generation by default; do not add a fake entity or pass the removed `--allow-no-models` flag.
 - `db:check` generates the client and uses Prisma's PostgreSQL adapter for a real, read-only `SELECT 1` and catalog check that no non-system relations exist. It accepts only the configured loopback database and creates no tables or migrations.
 - `db:down` removes the local container/network but **retains the named PostgreSQL volume**.
+- **Destructive, local-only reset:** run `node scripts/db-local.mjs reset --confirm-local-reset` only when the selected project’s data is disposable. This direct Node command is canonical; Windows/npm 11.9.0 was observed consuming the flag through npm forwarding. Bare `npm run db:reset` intentionally refuses. The explicit confirmation and volume ownership/label checks remain required.
 
 The official `postgres:18.6-bookworm` image is patch/distribution pinned. PostgreSQL 18 stores data beneath `/var/lib/postgresql/18/docker`, so the named volume mounts `/var/lib/postgresql`. PostgreSQL is published only at `127.0.0.1`, with SCRAM host authentication. These are local development boundaries, not production topology or credential-management decisions. Docker tags can receive rebuilt layers; this is not an immutable digest pin.
 

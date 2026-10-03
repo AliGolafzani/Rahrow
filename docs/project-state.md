@@ -6,13 +6,13 @@ Snapshot date: 2026-10-03. This document describes verified work and dependencie
 
 Foundation, bounded task **FOUNDATION-02 — Local PostgreSQL + Prisma Baseline: PARTIAL**.
 
-Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Required real Docker database verification remains blocked. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized.
+Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Ali supplied successful Windows Docker/PostgreSQL evidence for the published baseline. The approved reset-documentation remediation is implemented and offline-verified; fresh-run acceptance remains pending; this cloud executor still has no Docker runtime. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized.
 
 ## PROJECT PHASE
 
 Governance and FOUNDATION-01 are approved. FOUNDATION-01 is published on `main` at [96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319](https://github.com/AliGolafzani/Rahrow/commit/96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319), the verified baseline for this task. This supersedes the earlier wording that did not claim FOUNDATION-01 publication.
 
-FOUNDATION-02 source is prepared for the `foundation-02-local-postgres-prisma` topic branch while live Docker acceptance is pending. Do not treat branch publication as task completion or authorization to advance `main`. The task adds only local Compose/PostgreSQL configuration, empty-model Prisma tooling, guarded lifecycle/connectivity checks, documentation and dependency changes. No product behavior or domain schema is implemented.
+FOUNDATION-02 was published on `foundation-02-local-postgres-prisma` at [e45923c003def6fcb551aadca51ca9c6143a5caa](https://github.com/AliGolafzani/Rahrow/commit/e45923c003def6fcb551aadca51ca9c6143a5caa). The reset remediation remains on that branch while fresh-run acceptance is pending. Do not treat branch publication as task completion or authorization to advance `main`. The task adds only local Compose/PostgreSQL configuration, empty-model Prisma tooling, guarded lifecycle/connectivity checks, documentation and dependency changes. No product behavior or domain schema is implemented.
 
 ## COMPLETED
 
@@ -29,18 +29,30 @@ No product model, migration, seed/demo data, runtime NestJS database provider, e
 
 ## IN PROGRESS
 
-- Independent checks available without a Docker engine are complete. The prepared change remains PARTIAL because live database acceptance is blocked.
-- Completion is waiting for a Docker-capable environment and the remaining live database acceptance checks. No later Foundation task or product implementation is in progress.
+- The approved minimal reset remediation documents `node scripts/db-local.mjs reset --confirm-local-reset` as the canonical destructive, local-only command. The refusal message now prints that exact command. Parser, explicit argv confirmation, local Docker endpoint restrictions, volume ownership/label checks, package scripts, dependencies and lockfile are unchanged.
+- New subprocess regression tests exercise the real CLI entry point: unconfirmed and incorrect confirmation refuse before Docker; the documented confirmation passes consent and still hits the local-environment guard. A Docker-call tripwire verifies no Docker invocation in these isolated tests. Existing scope/ownership tests remain intact.
+- This is an IMPLEMENTATION DETAIL/tooling correction, not a product question or material ADR. FOUNDATION-02 stays PARTIAL pending fresh Windows acceptance on the remediation commit. No later Foundation task is in progress.
 
-## BLOCKED
+## USER-SUPPLIED WINDOWS LIVE EVIDENCE
 
-- **Real Docker runtime verification:** the available execution environment has no Docker daemon or daemon socket, and no connected computer or saved coding environment is available. Rootless prerequisites are absent; no host-security changes were made. A standalone Compose client can parse configuration but cannot prove runtime behavior.
-- Still required: startup from a fresh isolated named volume, healthy state, authenticated Prisma connection, live empty-catalog inspection, named-volume lifecycle behavior, and successful shutdown/removal of only the fresh QA resources.
-- The environment request is pending. Do not report these checks PASS from mocks, a native PostgreSQL substitute, or configuration parsing; do not mark FOUNDATION-02 DONE until actual acceptance succeeds.
-- Development-only dependency advisories remain unresolved; current evidence and exposure limits are under KNOWN RISKS.
-- The PRD is absent from the public repository. The supplied Foundation requirements cover this bounded tooling task; future behavior still requires the relevant text from Rahrow Lead.
+Ali reported the following results on 2026-10-03 for commit `e45923c003def6fcb551aadca51ca9c6143a5caa`. These are user-executed results, not a live run performed by this cloud executor:
+
+- Windows: Docker Engine 28.1.1, Compose 2.35.1-desktop.1, Node 24.19.0, npm 11.9.0, Git 2.49.0.windows.1.
+- Clean `npm ci` passed; QA project `rahrow-local-qa-20261003160726` reached HEALTHY, publishing only `127.0.0.1:55432 -> 5432`.
+- Prisma reported: “PASS: Prisma SELECT 1, local read-only connection, zero models and zero non-system relations.”
+- Full regression passed: lint, all typechecks, Next.js/NestJS builds, 2/2 application smoke tests, 5/5 lifecycle guard tests and 2/2 Prisma/database baseline tests.
+- Cleanup removed the QA container, network and labeled volume; subsequent project-filtered container/volume/network listings showed no remaining QA resources.
+- The documented npm-forwarded reset invocation emitted `Unknown cli config --confirm-local-reset`; the script correctly refused without argv confirmation. Direct `node scripts/db-local.mjs reset --confirm-local-reset` succeeded and removed only expected labeled QA resources. This is an observed Windows/npm forwarding issue, not a change to destructive consent semantics.
+
+## BLOCKED / REMAINING ACCEPTANCE
+
+- **Cloud runtime limit:** this executor has no Docker daemon/socket. No host/system/security changes were made to add Docker. Offline fixtures and standalone Compose parsing are not live runtime evidence.
+- **Fresh remediation-commit run required on Windows:** record exact commit/tool versions; explicitly prove the uniquely named QA volume is absent before startup and quiet Compose configuration passes; start PostgreSQL and record HEALTHY plus loopback-only mapping; run Prisma validation/generation, real read-only `SELECT 1` and zero non-system relations check; rerun full FOUNDATION-01 regression and reset tests; verify unconfirmed npm reset refuses without deleting resources; record the running server version and read-only cluster system identifier; normal shutdown must retain the same owned volume and restart must preserve that identifier; use the canonical direct Node reset and verify only that QA container/network/volume are gone.
+- Explicit empty-volume preflight, Compose validation and normal-shutdown retention evidence were not included in the supplied live summary. The previous run is preserved, but does not prove fresh acceptance of this remediation commit.
+- Development-only dependency advisories remain unresolved; current evidence and exposure limits are under KNOWN RISKS. No audit suppression or dependency modification is part of this remediation.
+- The PRD is absent from the public repository. Supplied Foundation requirements cover this bounded tooling task; future product behavior still requires the relevant text from Rahrow Lead.
 - Product questions block only their recorded affected behavior. None was resolved or used to block unrelated tooling work.
-- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here.
+- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here. `main` must remain at FOUNDATION-01 until required live verification and separate approval.
 
 ## PRODUCT OPEN QUESTIONS
 
@@ -85,6 +97,15 @@ No provider or hosting choice has been selected. Production hosting remains a se
 
 ## LATEST TEST STATUS
 
+### Reset remediation checks (2026-10-03)
+
+- Clean `npm ci`, `npm ls --all`, offline Prisma validation and full `npm run check`: **PASS**. Aggregate includes lint, all typechecks/builds, 2/2 application smoke tests, 8/8 lifecycle tests and 2/2 Prisma baseline tests. An initial lint failure from missing explicit Node imports in the new test fixture was corrected before the successful full rerun.
+- Actual root `npm run db:reset`: **EXPECTED REFUSAL**, exit 1, showing the canonical direct Node command before environment loading or Docker access. Package scripts and `package-lock.json` are byte-for-byte unchanged from e45923c.
+- Runtime audit: **PASS**, exit 0, 0 findings. Current full audit: **FAIL**, exit 1, **10 package entries: 9 high and 1 moderate**. The additional moderate entry is `@prisma/client` via `prisma`, with no separate direct advisory URL and `fixAvailable: false` in this audit output; the four direct advisories below persist. No dependency changes or suppression were made. This supersedes the numeric total of the preserved earlier audit below.
+- Live fresh Windows checks on the remediation commit: **PENDING**, not executed by this Docker-less cloud environment.
+
+### Preserved FOUNDATION-02 baseline evidence
+
 - Author checks: dependency install/tree, offline Prisma validation and zero-model generation, local database-tooling guards, lint, tooling typecheck and independent API build: **PASS**.
 - Independent clean `npm ci` and `npm ls --all`: **PASS**. An interrupted first attempt and an unwritable default npm cache were corrected; the clean install used a writable external cache without changing the repository dependency contract.
 - Official Compose v5.6.0 checksum verification and daemon-free `config --quiet`: **PASS**. Normalized configuration checks cover one service, pinned image tag, loopback mapping, named-volume mount/labels, health check, SCRAM and no automatic restart.
@@ -92,23 +113,23 @@ No provider or hosting choice has been selected. Production hosting remains a se
 - Independent plain Prisma 7.10.0 validation and zero-model generation without a local `.env`: **PASS**. Independent `npm run check`: **PASS**, including lint, all workspace/tooling typechecks, shared/web/API builds, the original 2/2 startup smoke tests, and 7/7 database guard/model tests. No product behavior is covered or claimed.
 - Runtime-only audit: **PASS**, exit 0 and 0 findings. Full audit: **FAIL**, exit 1 and 9 high-severity package entries across 4 advisories. Both results were independently reproduced from the clean snapshot; exact paths and fix constraints are below.
 - Independent frozen-source comparison, preserved governance/scoped instructions, ignored environment/generated files, no model/migration/seed source, and secret/scope checks: **PASS**.
-- Live PostgreSQL startup/health, real `SELECT 1`, live zero-table verification, persistence and shutdown/volume cleanup: **BLOCKED / NOT RUN** because no Docker engine is available. No test database resources were created or destroyed.
+- Live PostgreSQL startup/health, real `SELECT 1`, zero non-system relations and scoped cleanup: **USER-REPORTED PASS for e45923c** as detailed above. **NOT RUN by this cloud executor; fresh remediation-commit acceptance remains pending.** Explicit preflight/Compose/retention evidence still needs capture.
 - No product authorization/payment/concurrency tests, product migrations, staging/production checks, CI or deployment were performed. Full Foundation and release-candidate acceptance are not claimed.
 
 ## KNOWN RISKS
 
-- The central task goal remains unproven until real Docker/PostgreSQL startup, connection and teardown succeed. Source review and offline generation are not replacements for those checks.
+- Previous Windows runtime success is preserved as user-supplied evidence. Fresh acceptance must cover the remediation commit and the explicit missing gates; source review and offline fixtures cannot substitute for that run.
 - Docker image `postgres:18.6-bookworm` is patch/distribution pinned, not digest pinned; rebuilt upstream image layers can change. The local-only example credentials must never be reused outside this disposable setup. Docker Engine 28+ is required by the local lifecycle guard; remote/TCP/SSH daemon endpoints are rejected.
 - Existing development lint advisory [GHSA-vfj7-8cjw-p6xm / CVE-2026-93687](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): `eslint-config-next` → Next ESLint plugin → `fast-glob` → `micromatch` → `braces@3.0.3`. It accounts for 5 package findings; no patched braces version was available when checked. Repository lint patterns must remain trusted inputs.
 - New development tooling advisory [GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx): Prisma 7.10.0 → `@prisma/config@7.10.0` → pinned `deepmerge-ts@7.1.5`; fix is version 8.0.0, outside the upstream exact pin. Current Prisma configuration is trusted local source and does not accept externally supplied recursive object graphs. This exposure limit is not remediation.
 - Prisma 7.10.0 also pins `mysql2@3.15.3`, affected by [authentication downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) and [compressed-protocol decompression exhaustion](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) advisories. A version satisfying both fixes is outside the exact upstream pin. This PostgreSQL-only tooling path does not open a MySQL connection; the dependency nevertheless remains in the development tree.
-- The new Prisma/config/deepmerge/mysql2 paths add 4 package findings, for 9 total package findings across 4 advisories including braces. Runtime-only audit is separate; it does not establish overall security. No unsupported override, prerelease adoption, incompatible downgrade, audit suppression or weakened check was used. Rahrow Lead owns tracking compatible upstream fixes within a separately authorized task.
+- The original Prisma/config/deepmerge/mysql2 paths added 4 package findings, for the original 9 high package entries across 4 direct advisories including braces. The remediation audit additionally reports one moderate `@prisma/client` transitive entry via `prisma`, making the current total 10; this is an audit-report change with an unchanged lockfile, not a newly introduced dependency. Runtime-only audit is separate; it does not establish overall security. No unsupported override, prerelease adoption, incompatible downgrade, audit suppression or weakened check was used. Rahrow Lead owns tracking compatible upstream fixes within a separately authorized task.
 - ESLint 9.39.5 remains the compatible lint-stack pin but is unsupported upstream; the current plugin peer ranges exclude ESLint 10. This earlier risk remains open.
 - Product requirements, security behavior, transactional correctness and production readiness remain unimplemented/unverified. Keep all 25 product questions open and follow the PRD availability rule.
 - The repository is public. Never publish the private PRD, private conversations, real credentials, local `.env` or generated output without applicable authorization.
 
 ## NEXT RECOMMENDED TASK
 
-Complete the remaining **FOUNDATION-02 runtime verification** in a Docker-capable environment, using a fresh uniquely named local QA project and disposable volume. Verify startup/health, real read-only Prisma connection and empty catalog, then cleanup only that run's resources and rerun affected checks. Update verified evidence before considering the task complete or advancing `main`.
+Run the **fresh FOUNDATION-02 Windows acceptance checklist** in [infra/README.md](../infra/README.md) on the published remediation commit with a new isolated QA project and disposable volume. Capture all remaining gates, including the direct Node destructive command. Update verified evidence before considering FOUNDATION-02 completion. Advancing `main` still requires separate approval.
 
 Stop at this boundary. Do not begin FOUNDATION-03, CI, Meilisearch, product schema, Auth, staging/production infrastructure or any unrelated feature automatically.

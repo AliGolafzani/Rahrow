@@ -21,9 +21,11 @@ Run commands from the repository root. The wrapper fixes the Compose file and de
 | `npm run prisma:generate` | Generate the ignored zero-model client without touching a database |
 | `npm run db:check` | Run a real read-only local connectivity/catalog check through Prisma |
 | `npm run db:down` | Remove this local container/network; keep data |
-| `npm run db:reset -- --confirm-local-reset` | **Destructive, local-only:** stop this project and delete only its correctly labeled PostgreSQL volume |
+| `node scripts/db-local.mjs reset --confirm-local-reset` | **Destructive, local-only:** stop this project and delete only its correctly labeled PostgreSQL volume |
 
-`db:reset` does not restart PostgreSQL, prune volumes, or run migrations. It refuses volumes with missing/mismatched Compose project, volume, environment, or component labels. Use it only when that project's local data is disposable. `db:up` then creates a new empty database. Never use `docker volume prune` or broad `down --volumes` as a cleanup shortcut.
+The direct Node command above is the canonical destructive reset command. Windows/npm 11.9.0 was observed consuming the confirmation flag in `npm run db:reset -- --confirm-local-reset`; do not rely on npm forwarding for this action. Bare `npm run db:reset` remains fail-closed and prints the supported command. Confirmation is never supplied automatically by a package script, environment variable or npm config.
+
+Reset does not restart PostgreSQL, prune volumes, or run migrations. It refuses volumes with missing/mismatched Compose project, volume, environment, or component labels. Use it only when that project's local data is disposable. `db:up` then creates a new empty database. Never use `docker volume prune` or broad `down --volumes` as a cleanup shortcut.
 
 The named volume is `<project>_postgres-data`. Normal shutdown retains it across container recreation. Official-image initialization settings apply only to an empty data directory: editing `.env` does not change credentials or database names in an existing volume. Preserve valuable data through a separately authorized plan; do not reset it.
 
@@ -53,7 +55,7 @@ npm audit
 npm run db:down
 
 # Only after confirming this run's data is disposable:
-npm run db:reset -- --confirm-local-reset
+node scripts/db-local.mjs reset --confirm-local-reset
 # Verify no container or volume for this exact project remains.
 docker ps -a --filter "label=com.docker.compose.project=${RAHROW_LOCAL_PROJECT}"
 docker volume ls --filter "label=com.docker.compose.project=${RAHROW_LOCAL_PROJECT}"
@@ -64,6 +66,22 @@ A no-match grep status is expected; a Docker failure is not proof of clean state
 Record image/server versions, healthy state, real connection, zero user relations, shutdown, volume removal, and unchanged governance. Check `.env` and `apps/api/generated/prisma` remain ignored. `_prisma_migrations` is also disallowed for this empty baseline: no migration is needed. Offline guard tests and Compose parsing are not runtime verification.
 
 Only fresh resources created for this QA run may be destroyed automatically. Existing developer data is not disposable by assumption. Runtime verification remains incomplete until Docker-based startup, connection, and cleanup actually succeed; native PostgreSQL or mocks are not substitutes.
+
+## Fresh Windows remediation acceptance
+
+Use PowerShell from the repository root on the published remediation commit. Capture command output and exit codes without rendering `.env` or connection credentials. These gates are still required before FOUNDATION-02 completion:
+
+1. Record `git rev-parse HEAD`, `git status --short`, `node --version`, `npm --version`, `docker version` and `docker compose version`. Use Node 24.19.0/npm 11.9.0 and a running local Docker Engine 28+.
+2. Set `$env:RAHROW_LOCAL_PROJECT = "rahrow-local-qa-$(Get-Date -Format yyyyMMddHHmmss)"`. Set `$env:POSTGRES_PORT = '55432'` (or a free port) and matching local-only `DATABASE_URL`, following `.env.example`. Keep the same shell and project throughout.
+3. Verify the exact `<project>_postgres-data` volume is absent using `docker volume ls --format '{{.Name}}'`; also check container/network lists filtered by `label=com.docker.compose.project=$env:RAHROW_LOCAL_PROJECT`. All Docker listing commands must succeed and show no matching QA resources. If any exist, choose a new suffix; never delete pre-existing data to satisfy this preflight.
+4. Run `npm ci` and `npm run db:config`; both must exit 0. Do not print raw Compose configuration with secrets.
+5. Run `npm run db:up` and `npm run db:status`. Inspect the selected QA container to record HEALTHY, `postgres:18.6-bookworm`, loopback-only `127.0.0.1:<selected-port> -> 5432`, and the exact named volume. Record its Compose project/volume and Rahrow local/component labels. Through that exact container, record `SHOW server_version` and the read-only `SELECT system_identifier FROM pg_control_system()` result.
+6. Run `npm run prisma:validate`, `npm run prisma:generate` and `npm run db:check`. Require the real Prisma `SELECT 1`, read-only session and zero non-system relations result; do not create models, migrations or test tables.
+7. Run `npm run check`. Require lint, all typechecks/builds, 2/2 application smoke tests, 8/8 lifecycle tests and 2/2 Prisma baseline tests. Run both audit commands separately; retain the full audit's known failure evidence rather than fixing/suppressing it during this task.
+8. Run bare `npm run db:reset`; expect refusal/nonzero exit and the direct Node command in its message. Verify the QA container and owned volume still exist. This expected refusal is not a successful reset.
+9. Run `npm run db:down`; verify the QA container/network are gone and the same owned volume remains. Restart with `npm run db:up` and rerun `npm run db:check` to confirm the retained volume remains usable without creating product data. Recheck `pg_control_system().system_identifier` and require the same value to prove the same database cluster survived.
+10. Confirm only this run's QA data is disposable, then run `node scripts/db-local.mjs reset --confirm-local-reset`. Require exit 0. Verify the exact QA volume and project-filtered containers, volumes and networks are absent; do not use broad prune/volume deletion.
+11. Preserve the commit-specific output and report deviations. Fresh runtime acceptance is pending until these checks pass; advancing `main` needs separate approval.
 
 ## Technical choices and troubleshooting
 
