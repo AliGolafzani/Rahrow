@@ -6,13 +6,13 @@ Snapshot date: 2026-10-03. This document describes verified work and dependencie
 
 Foundation, bounded task **FOUNDATION-02 — Local PostgreSQL + Prisma Baseline: COMPLETE**.
 
-Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Ali supplied fresh Windows acceptance evidence for the reset-remediation commit and explicitly authorized recording FOUNDATION-02 as COMPLETE. The live evidence is user-executed, not a Docker run by this cloud executor. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized. Merge to `main` still requires separate approval.
+Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Ali supplied fresh Windows acceptance evidence for the reset-remediation commit and explicitly authorized recording FOUNDATION-02 as COMPLETE. The live evidence is user-executed, not a Docker run by this cloud executor. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized. Ali separately approved the merge to `main`, completed as a fast-forward on 2026-10-03.
 
 ## PROJECT PHASE
 
 Governance and FOUNDATION-01 are approved. FOUNDATION-01 is published on `main` at [96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319](https://github.com/AliGolafzani/Rahrow/commit/96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319), the verified baseline for this task. This supersedes the earlier wording that did not claim FOUNDATION-01 publication.
 
-FOUNDATION-02 was published on `foundation-02-local-postgres-prisma` at [e45923c003def6fcb551aadca51ca9c6143a5caa](https://github.com/AliGolafzani/Rahrow/commit/e45923c003def6fcb551aadca51ca9c6143a5caa). The reset remediation was published on the same branch at [46092426cdc0a44ba2e68ebfb87043e0d26d2129](https://github.com/AliGolafzani/Rahrow/commit/46092426cdc0a44ba2e68ebfb87043e0d26d2129), the exact commit covered by the fresh Windows acceptance below. FOUNDATION-02 is complete on that evidence and Ali’s explicit completion instruction; no merge or authorization to advance `main` is implied. The task adds only local Compose/PostgreSQL configuration, empty-model Prisma tooling, guarded lifecycle/connectivity checks, documentation and dependency changes. No product behavior or domain schema is implemented.
+FOUNDATION-02 was published on `foundation-02-local-postgres-prisma` at [e45923c003def6fcb551aadca51ca9c6143a5caa](https://github.com/AliGolafzani/Rahrow/commit/e45923c003def6fcb551aadca51ca9c6143a5caa). The reset remediation was published on the same branch at [46092426cdc0a44ba2e68ebfb87043e0d26d2129](https://github.com/AliGolafzani/Rahrow/commit/46092426cdc0a44ba2e68ebfb87043e0d26d2129), the exact commit covered by the fresh Windows acceptance below. FOUNDATION-02 is complete on that evidence and Ali’s explicit completion instruction. Following Ali’s separate merge approval, `main` was fast-forwarded from the FOUNDATION-01 baseline to [cede593e969efa07d9b0de02b70cf6c9ce8527aa](https://github.com/AliGolafzani/Rahrow/commit/cede593e969efa07d9b0de02b70cf6c9ce8527aa), preserving all three FOUNDATION-02 commits and the exact reviewed tree `48b9c21fafcccf6eb35da76f02c9b38fc6b70474`. The task adds only local Compose/PostgreSQL configuration, empty-model Prisma tooling, guarded lifecycle/connectivity checks, documentation and dependency changes. No product behavior or domain schema is implemented.
 
 ## COMPLETED
 
@@ -70,7 +70,7 @@ Ali explicitly attested that all remaining FOUNDATION-02 live acceptance gates p
 - Development-only dependency advisories remain unresolved; both attributed audit observations and exposure limits remain under KNOWN RISKS. No audit suppression or dependency modification is part of this completion update.
 - The PRD is absent from the public repository. Supplied Foundation requirements cover this bounded tooling task; future product behavior still requires the relevant text from Rahrow Lead.
 - Product questions block only their recorded affected behavior. None was resolved or used to block unrelated tooling work.
-- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here. `main` remains at FOUNDATION-01; merge requires separate approval even though FOUNDATION-02 live verification is now complete.
+- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here. `main` now contains the approved FOUNDATION-02 history and reviewed tree. Merge approval does not authorize FOUNDATION-03 or any additional implementation.
 
 ## PRODUCT OPEN QUESTIONS
 
@@ -148,6 +148,6 @@ No provider or hosting choice has been selected. Production hosting remains a se
 
 ## NEXT RECOMMENDED TASK
 
-Review the completed FOUNDATION-02 acceptance evidence and known development-tooling risks, then obtain Ali’s separate approval before merging `foundation-02-local-postgres-prisma` into `main`. This completion/state-only update authorizes neither a merge nor additional implementation.
+Propose the next bounded FOUNDATION-03 task for Ali’s separate approval. This merge-status documentation update authorizes no additional implementation.
 
 Stop at this boundary. Do not begin FOUNDATION-03, CI, Meilisearch, product schema, Auth, staging/production infrastructure or any unrelated feature automatically.
