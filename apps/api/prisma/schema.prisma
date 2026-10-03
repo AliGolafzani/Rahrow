@@ -1,0 +1,11 @@
+// FOUNDATION-02 is tooling only. Product models and migrations are not authorized.
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -22,8 +22,17 @@
     "build": "npm run build --workspace @rahrow/contracts && npm run build --workspace @rahrow/ui && npm run build:web && npm run build:api",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "npm run typecheck --workspace @rahrow/contracts --workspace @rahrow/ui --workspace @rahrow/web --workspace @rahrow/api",
-    "test": "node --test scripts/smoke.test.mjs",
-    "check": "npm run lint && npm run typecheck && npm run build && npm test"
+    "test": "node --test scripts/smoke.test.mjs && npm run test:db",
+    "check": "npm run lint && npm run typecheck && npm run build && npm test",
+    "db:config": "node scripts/db-local.mjs config",
+    "db:up": "node scripts/db-local.mjs up",
+    "db:down": "node scripts/db-local.mjs down",
+    "db:status": "node scripts/db-local.mjs status",
+    "db:reset": "node scripts/db-local.mjs reset",
+    "db:check": "npm run db:check --workspace @rahrow/api",
+    "prisma:validate": "npm run prisma:validate --workspace @rahrow/api",
+    "prisma:generate": "npm run prisma:generate --workspace @rahrow/api",
+    "test:db": "node --test scripts/db-local.test.mjs && npm run test:db --workspace @rahrow/api"
   },
   "devDependencies": {
     "@rahrow/config": "0.0.0",

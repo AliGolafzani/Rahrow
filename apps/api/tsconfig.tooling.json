@@ -1,0 +1,11 @@
+{
+  "extends": "@rahrow/config/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["prisma.config.ts", "scripts/**/*.ts", "generated/prisma/**/*.ts"]
+}

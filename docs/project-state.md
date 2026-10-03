@@ -4,42 +4,43 @@ Snapshot date: 2026-10-03. This document describes verified work and dependencie
 
 ## CURRENT MILESTONE
 
-Foundation, bounded task **FOUNDATION-01 — Repository and Monorepo Skeleton: COMPLETE**.
+Foundation, bounded task **FOUNDATION-02 — Local PostgreSQL + Prisma Baseline: PARTIAL**.
 
-Ali approved the governance scaffold and authorized this task on 2026-10-03. Only the repository/application skeleton is in scope. The complete Foundation milestone and product implementation are not authorized by that task.
+Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Required real Docker database verification remains blocked. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized.
 
 ## PROJECT PHASE
 
-Governance approved. FOUNDATION-01 skeleton implemented and independently verified. No product behavior is implemented. The complete Foundation milestone is not complete; FOUNDATION-02 has not started.
+Governance and FOUNDATION-01 are approved. FOUNDATION-01 is published on `main` at [96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319](https://github.com/AliGolafzani/Rahrow/commit/96ca14d9f0ee3d0e0f5db1cd5b1a67d698c70319), the verified baseline for this task. This supersedes the earlier wording that did not claim FOUNDATION-01 publication.
 
-Verified baseline for this task: `main` at `95f64b9aa92c1c179f6c3bad3096938432cc027c`, containing the five approved governance files. The repository had been empty at the earlier governance inspection. Initial root-instructions publication was verified at `4332646aa3e5c3a3de2781428d38205b38edeccd`.
-
-The skeleton adds `apps/web`, `apps/api`, `packages/contracts`, `packages/ui`, `packages/config`, `infra`, root npm workspace tooling, documentation, and startup smoke checks. Root instructions, product questions, and ADR guidance/template are preserved. No implementation commit or PR is claimed in this snapshot.
+FOUNDATION-02 source is prepared for the `foundation-02-local-postgres-prisma` topic branch while live Docker acceptance is pending. Do not treat branch publication as task completion or authorization to advance `main`. The task adds only local Compose/PostgreSQL configuration, empty-model Prisma tooling, guarded lifecycle/connectivity checks, documentation and dependency changes. No product behavior or domain schema is implemented.
 
 ## COMPLETED
 
-- Governance baseline inspection, preparation, validation, and independent review of the original five files; all 25 product questions remain OPEN.
-- Ali's approval of the governance and the three deferred scoped instruction files; bounded authorization of FOUNDATION-01.
-- Creation of the approved `apps/api/AGENTS.md`, `apps/web/AGENTS.md`, and `infra/AGENTS.md` with the exact deferred contents.
-- Private npm workspaces with one root lockfile, shared TypeScript/ESLint configuration, exact direct dependency versions, root commands, and ignored generated/local files.
-- Neutral Next.js 16 placeholder and empty NestJS application with no application routes. Contracts/UI entry points intentionally export nothing. Next.js `agentRules: false` prevents development startup from modifying the approved scoped instructions.
-- Initial install and a clean `npm ci`, complete dependency-tree checks, lint, four workspace type checks, both library builds, independent web/API builds, and two built-application smoke tests passed. The aggregate check passed again after the clean install and after the final Next.js configuration change.
-- Independent QA **PASS** on 2026-10-03: separate clean install and valid dependency tree; sibling-free builds; final aggregate checks; both root development scripts; approved-instruction preservation; scope/content review. No scope blocker found.
+- Governance and FOUNDATION-01 implementation/verification are complete and approved; the skeleton is published on `main` at the baseline commit above.
+- Existing root/scoped agent instructions, the 25 OPEN product questions, and ADR guidance/template remain unchanged.
+- INFRA-SECURITY prepared one local `postgres:18.6-bookworm` service with loopback-only publishing, SCRAM host authentication, health check and a labeled named volume. The PostgreSQL 18 mount layout is used.
+- Lifecycle commands fix the Compose file and local project namespace. Normal shutdown retains data; destructive reset requires explicit confirmation and exact project/volume/local-scope ownership checks. No global volume pruning is permitted.
+- BACKEND prepared exact Prisma CLI/Client/PostgreSQL adapter version 7.10.0, an empty-model schema, Prisma 7 configuration, ignored generated output, and separately typechecked tooling. PostgreSQL driver resolves to `pg` 8.23.1. Plain `prisma generate` supports zero models in this installed version; the obsolete `--allow-no-models` flag is not used.
+- A guarded read-only verifier is prepared for real `SELECT 1`, expected local database identity, read-only session state and zero non-system relations. Its source is not evidence that the database checks ran.
+- Public development-only example values are documented in `.env.example`; actual `.env` and generated Prisma output remain ignored.
+- Official Docker Compose v5.6.0 standalone client checksum and daemon-free configuration validation passed. No Docker daemon, container, database or volume was created by these checks.
 
-No product module, database schema/migration, Prisma/PostgreSQL/Meilisearch setup, Docker setup, CI configuration, provider integration, seed data, or production infrastructure has been created.
+No product model, migration, seed/demo data, runtime NestJS database provider, external provider integration, staging/production database, CI, deployment, Meilisearch setup, or product feature has been created.
 
 ## IN PROGRESS
 
-- No implementation is in progress. FOUNDATION-01 is complete and work stops at this task boundary.
-- Repository publication status is reported separately by Rahrow Lead; no product implementation, later Foundation task, or production operation is in progress.
+- Independent checks available without a Docker engine are complete. The prepared change remains PARTIAL because live database acceptance is blocked.
+- Completion is waiting for a Docker-capable environment and the remaining live database acceptance checks. No later Foundation task or product implementation is in progress.
 
 ## BLOCKED
 
-- The PRD is absent from the public repository. The architecture excerpt supplied for FOUNDATION-01 covers this skeleton; dependent future behavior still needs the relevant contract text from Rahrow Lead.
-- Each OPEN product question blocks only its recorded affected behavior when that work is authorized. None was silently resolved by this skeleton.
-- Later Foundation tasks and product features need separately bounded authorization; completing this skeleton does not authorize the next task.
-- A development-toolchain advisory has no compatible published fix at the verified date; details are under KNOWN RISKS. It is not a product question or an application-runtime finding.
-- Production deployment, production database mutation, and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here.
+- **Real Docker runtime verification:** the available execution environment has no Docker daemon or daemon socket, and no connected computer or saved coding environment is available. Rootless prerequisites are absent; no host-security changes were made. A standalone Compose client can parse configuration but cannot prove runtime behavior.
+- Still required: startup from a fresh isolated named volume, healthy state, authenticated Prisma connection, live empty-catalog inspection, named-volume lifecycle behavior, and successful shutdown/removal of only the fresh QA resources.
+- The environment request is pending. Do not report these checks PASS from mocks, a native PostgreSQL substitute, or configuration parsing; do not mark FOUNDATION-02 DONE until actual acceptance succeeds.
+- Development-only dependency advisories remain unresolved; current evidence and exposure limits are under KNOWN RISKS.
+- The PRD is absent from the public repository. The supplied Foundation requirements cover this bounded tooling task; future behavior still requires the relevant text from Rahrow Lead.
+- Product questions block only their recorded affected behavior. None was resolved or used to block unrelated tooling work.
+- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here.
 
 ## PRODUCT OPEN QUESTIONS
 
@@ -84,29 +85,30 @@ No provider or hosting choice has been selected. Production hosting remains a se
 
 ## LATEST TEST STATUS
 
-Verification date: 2026-10-03. Toolchain: Node 24.19.0; npm 11.9.0.
-
-- `npm install` and final clean `npm ci`: **PASS**. `npm ls --all`: **PASS** after each, with valid workspace links and no missing/invalid dependencies.
-- `npm run lint`: **PASS**, zero warnings. An initial missing `URL` import in the smoke script was fixed; the successful check includes the fix.
-- `npm run typecheck`: **PASS** for contracts, UI, web (including `next typegen`), and API.
-- `npm run build`: **PASS**, including both placeholder libraries, Next.js 16.3.8, and NestJS 12.1.2. The web and API builds do not require a running sibling app or external services.
-- `npm test`: **PASS**, 2 tests, 0 failed, skipped, or cancelled. Checks cover empty workspace exports, built web HTTP 200/placeholder text, and built API startup/default HTTP 404; test children are stopped.
-- Root `npm run dev:web` and `npm run dev:api`: **PASS** in a disposable source copy with local dependencies; expected HTTP responses and content-change watch behavior verified, approved web instructions confirmed unchanged, then process groups stopped and ports confirmed closed. Independent QA also verified both root development scripts and instruction-file preservation.
-- `npm run check`: **PASS**, including repeats after clean `npm ci`, development-only dependency classification, and final `agentRules: false` configuration. Independent final aggregate run: **PASS**, exit 0, smoke tests 2/2.
-- `npm audit --omit=dev`: **PASS**, 0 vulnerabilities after correct dependency classification. This is a runtime dependency audit, not proof of product security.
-- Full `npm audit`: **FAIL**, 5 high-severity package findings arising from one development-only `braces` advisory. See KNOWN RISKS; no audit suppression, overrides, or incompatible framework downgrade applied.
-- `npm dedupe --dry-run`: **PASS** as a diagnostic; proposed deduplication affects unrelated ESLint utilities and does not replace vulnerable `braces`.
-- Governance validation of the original scaffold: **PASS** (historical), including 25 unique product questions and 22 scoped technical-pending topics. Final skeleton JSON/local-link/scope checks, exact deferred scoped instructions, preserved original governance, 25 OPEN questions, ignored generated artifacts, and `git diff --check`: **PASS**. Independent final content/scope/governance review: **PASS**.
-- Product/security/authorization/payment/concurrency/migration tests, CI, deployment, and restore checks: **NOT RUN / NOT IMPLEMENTED** in this task. The PRD release-candidate checks remain future requirements.
+- Author checks: dependency install/tree, offline Prisma validation and zero-model generation, local database-tooling guards, lint, tooling typecheck and independent API build: **PASS**.
+- Independent clean `npm ci` and `npm ls --all`: **PASS**. An interrupted first attempt and an unwritable default npm cache were corrected; the clean install used a writable external cache without changing the repository dependency contract.
+- Official Compose v5.6.0 checksum verification and daemon-free `config --quiet`: **PASS**. Normalized configuration checks cover one service, pinned image tag, loopback mapping, named-volume mount/labels, health check, SCRAM and no automatic restart.
+- Lifecycle guard unit tests: **PASS**, 5/5. Additional independent stubbed orchestration safety cases: **PASS**, 8/8. These test guards only and are not database runtime evidence.
+- Independent plain Prisma 7.10.0 validation and zero-model generation without a local `.env`: **PASS**. Independent `npm run check`: **PASS**, including lint, all workspace/tooling typechecks, shared/web/API builds, the original 2/2 startup smoke tests, and 7/7 database guard/model tests. No product behavior is covered or claimed.
+- Runtime-only audit: **PASS**, exit 0 and 0 findings. Full audit: **FAIL**, exit 1 and 9 high-severity package entries across 4 advisories. Both results were independently reproduced from the clean snapshot; exact paths and fix constraints are below.
+- Independent frozen-source comparison, preserved governance/scoped instructions, ignored environment/generated files, no model/migration/seed source, and secret/scope checks: **PASS**.
+- Live PostgreSQL startup/health, real `SELECT 1`, live zero-table verification, persistence and shutdown/volume cleanup: **BLOCKED / NOT RUN** because no Docker engine is available. No test database resources were created or destroyed.
+- No product authorization/payment/concurrency tests, product migrations, staging/production checks, CI or deployment were performed. Full Foundation and release-candidate acceptance are not claimed.
 
 ## KNOWN RISKS
 
-- Future specialists could mistake PRD references or this summary for having received the primary contract. Apply the root PRD availability rule to every dependent task.
-- Unresolved product outcomes remain unknown; preserve the question register and settled invariants. This skeleton does not establish authentication, premium protection, financial correctness, version history, or production readiness.
-- Development-only advisory [GHSA-vfj7-8cjw-p6xm / CVE-2026-93687](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): high-severity stack-exhaustion denial of service from deeply nested brace patterns. Dependency path: `eslint-config-next@16.3.8` → `@next/eslint-plugin-next@16.3.8` → `fast-glob@3.3.1` → `micromatch@4.0.8` → `braces@3.0.3`. The latest published `braces` is 3.0.3 and the advisory lists no patched version. npm's suggested change is `eslint-config-next@14.2.35`, an incompatible major downgrade for the selected framework baseline; it was not applied. Rahrow Lead owns follow-up on a compatible upstream fix. Development lint patterns must remain trusted repository/tooling inputs.
-- ESLint 9.39.5 is the compatible pin for the current Next.js lint-plugin peer ranges, but npm reports that ESLint 9 is no longer supported. ESLint 10 is outside the current React/import/accessibility lint-plugin peer ranges. Review a compatible upstream lint-stack update in a later bounded tooling task; no peer override or rule weakening was used.
-- The repository is public. Do not publish the PRD, private conversations, secrets, or non-public source material without authorization.
+- The central task goal remains unproven until real Docker/PostgreSQL startup, connection and teardown succeed. Source review and offline generation are not replacements for those checks.
+- Docker image `postgres:18.6-bookworm` is patch/distribution pinned, not digest pinned; rebuilt upstream image layers can change. The local-only example credentials must never be reused outside this disposable setup. Docker Engine 28+ is required by the local lifecycle guard; remote/TCP/SSH daemon endpoints are rejected.
+- Existing development lint advisory [GHSA-vfj7-8cjw-p6xm / CVE-2026-93687](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): `eslint-config-next` → Next ESLint plugin → `fast-glob` → `micromatch` → `braces@3.0.3`. It accounts for 5 package findings; no patched braces version was available when checked. Repository lint patterns must remain trusted inputs.
+- New development tooling advisory [GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx): Prisma 7.10.0 → `@prisma/config@7.10.0` → pinned `deepmerge-ts@7.1.5`; fix is version 8.0.0, outside the upstream exact pin. Current Prisma configuration is trusted local source and does not accept externally supplied recursive object graphs. This exposure limit is not remediation.
+- Prisma 7.10.0 also pins `mysql2@3.15.3`, affected by [authentication downgrade](https://github.com/advisories/GHSA-3f6p-5ww8-9rcr) and [compressed-protocol decompression exhaustion](https://github.com/advisories/GHSA-rgwj-5xj2-c3m3) advisories. A version satisfying both fixes is outside the exact upstream pin. This PostgreSQL-only tooling path does not open a MySQL connection; the dependency nevertheless remains in the development tree.
+- The new Prisma/config/deepmerge/mysql2 paths add 4 package findings, for 9 total package findings across 4 advisories including braces. Runtime-only audit is separate; it does not establish overall security. No unsupported override, prerelease adoption, incompatible downgrade, audit suppression or weakened check was used. Rahrow Lead owns tracking compatible upstream fixes within a separately authorized task.
+- ESLint 9.39.5 remains the compatible lint-stack pin but is unsupported upstream; the current plugin peer ranges exclude ESLint 10. This earlier risk remains open.
+- Product requirements, security behavior, transactional correctness and production readiness remain unimplemented/unverified. Keep all 25 product questions open and follow the PRD availability rule.
+- The repository is public. Never publish the private PRD, private conversations, real credentials, local `.env` or generated output without applicable authorization.
 
 ## NEXT RECOMMENDED TASK
 
-Report FOUNDATION-01 completion, exact verification results, remaining development-toolchain risks, and actual publication status. Stop at this task boundary. Rahrow Lead may propose FOUNDATION-02 as a separately bounded task for authorization; do not begin it, infrastructure setup, or product modules from this document alone.
+Complete the remaining **FOUNDATION-02 runtime verification** in a Docker-capable environment, using a fresh uniquely named local QA project and disposable volume. Verify startup/health, real read-only Prisma connection and empty catalog, then cleanup only that run's resources and rerun affected checks. Update verified evidence before considering the task complete or advancing `main`.
+
+Stop at this boundary. Do not begin FOUNDATION-03, CI, Meilisearch, product schema, Auth, staging/production infrastructure or any unrelated feature automatically.

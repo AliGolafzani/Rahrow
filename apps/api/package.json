@@ -7,7 +7,12 @@
     "dev": "nest start --watch --builder tsc",
     "build": "nest build --builder tsc",
     "start": "node dist/main.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:db",
+    "prisma:validate": "prisma validate",
+    "prisma:generate": "prisma generate",
+    "typecheck:db": "npm run prisma:generate && tsc -p tsconfig.tooling.json",
+    "db:check": "npm run prisma:generate && node scripts/check-database.ts",
+    "test:db": "npm run prisma:generate && node --test scripts/local-database.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "12.1.2",
@@ -18,8 +23,11 @@
   },
   "devDependencies": {
     "@nestjs/cli": "12.0.8",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "@rahrow/config": "0.0.0",
     "@types/node": "24.19.1",
+    "prisma": "7.10.0",
     "typescript": "6.0.3"
   }
 }

@@ -8,3 +8,6 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Reproducible, local-only Prisma tooling output
+/apps/api/generated/prisma/
