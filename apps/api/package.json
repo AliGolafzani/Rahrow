@@ -5,29 +5,37 @@
   "type": "module",
   "scripts": {
     "dev": "nest start --watch --builder tsc",
-    "build": "nest build --builder tsc",
+    "build": "npm run prepare:types && nest build --builder tsc",
     "start": "node dist/main.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:db",
+    "typecheck": "npm run prepare:types && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tooling.json",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
-    "typecheck:db": "npm run prisma:generate && tsc -p tsconfig.tooling.json",
+    "typecheck:db": "npm run prepare:types && tsc -p tsconfig.tooling.json",
     "db:check": "npm run prisma:generate && node scripts/check-database.ts",
-    "test:db": "npm run prisma:generate && node --test scripts/local-database.test.ts"
+    "test:db": "npm run prisma:generate && node --test scripts/local-database.test.ts",
+    "db:check:empty": "npm run prisma:generate && node scripts/check-database.ts --empty",
+    "db:migrate": "prisma migrate deploy",
+    "test:auth": "node --test test/*.test.mjs",
+    "test:auth:db": "npm run build && node scripts/check-auth-database.ts",
+    "predev": "npm run prepare:types",
+    "prepare:types": "npm run build --workspace @rahrow/contracts && npm run prisma:generate"
   },
   "dependencies": {
     "@nestjs/common": "12.1.2",
     "@nestjs/core": "12.1.2",
     "@nestjs/platform-express": "12.1.2",
     "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.2"
+    "rxjs": "7.8.2",
+    "@prisma/client": "7.10.0",
+    "@prisma/adapter-pg": "7.10.0",
+    "pg": "8.23.1"
   },
   "devDependencies": {
     "@nestjs/cli": "12.0.8",
-    "@prisma/adapter-pg": "7.10.0",
-    "@prisma/client": "7.10.0",
     "@rahrow/config": "0.0.0",
     "@types/node": "24.19.1",
-    "prisma": "7.10.0",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "@rahrow/contracts": "0.0.0",
+    "prisma-cli": "npm:prisma@7.10.0"
   }
 }

@@ -1,6 +1,6 @@
 # Local PostgreSQL boundary
 
-FOUNDATION-02 adds only local Docker Compose PostgreSQL and backend database tooling. It does not define application, staging, or production topology. Search, storage, providers, CI, deployment, backup/restore design, and production operations remain outside this task.
+The Foundation local-only Docker boundary is retained. AUTH-01 adds explicit versioned migration and exact-schema verification; no staging/production topology, provider or deployment is authorized.
 
 ## Prerequisites and configuration
 
@@ -17,9 +17,11 @@ Run commands from the repository root. The wrapper fixes the Compose file and de
 | `npm run db:config` | Validate Compose quietly; no daemon or database connection required |
 | `npm run db:up` | Start PostgreSQL and wait up to 90 seconds for health |
 | `npm run db:status` | Show container state, including stopped containers |
-| `npm run prisma:validate` | Validate the zero-model Prisma schema/configuration |
-| `npm run prisma:generate` | Generate the ignored zero-model client without touching a database |
-| `npm run db:check` | Run a real read-only local connectivity/catalog check through Prisma |
+| `npm run prisma:validate` | Validate the authorized Auth Prisma schema/configuration |
+| `npm run prisma:generate` | Generate the ignored generated client without touching a database |
+| `npm run db:check:empty` | Prove zero non-system relations before the first migration |
+| `npm run db:migrate` | Apply committed versioned migrations; never db push |
+| `npm run db:check` | Read-only connectivity, exact Auth schema and migration-history verification |
 | `npm run db:down` | Remove this local container/network; keep data |
 | `node scripts/db-local.mjs reset --confirm-local-reset` | **Destructive, local-only:** stop this project and delete only its correctly labeled PostgreSQL volume |
 
@@ -48,6 +50,10 @@ npm run db:up
 npm run db:status
 npm run prisma:validate
 npm run prisma:generate
+npm run db:check:empty
+npm run db:migrate
+npm run db:check
+npm run db:migrate # safe replay
 npm run db:check
 npm run check
 npm audit --omit=dev
@@ -63,13 +69,13 @@ docker volume ls --filter "label=com.docker.compose.project=${RAHROW_LOCAL_PROJE
 
 A no-match grep status is expected; a Docker failure is not proof of clean state. Stop on any failed prerequisite, startup, or connectivity check and record the failure. Audit findings are separate from database runtime results; still clean up only this run's disposable resources. On PowerShell, set variables with `$env:NAME = 'value'` and choose a unique suffix manually. The Node lifecycle commands are cross-platform.
 
-Record image/server versions, healthy state, real connection, zero user relations, shutdown, volume removal, and unchanged governance. Check `.env` and `apps/api/generated/prisma` remain ignored. `_prisma_migrations` is also disallowed for this empty baseline: no migration is needed. Offline guard tests and Compose parsing are not runtime verification.
+Record image/server versions, healthy state, empty preflight, successful migration, exact Auth table/bookkeeping allowlist, safe replay, same-volume/cluster down/up recheck and scoped cleanup. Check .env and apps/api/src/generated/prisma remain ignored. See [Auth verification](../docs/auth-foundation.md#migration-and-verification). Offline guards do not prove live database behavior.
 
 Only fresh resources created for this QA run may be destroyed automatically. Existing developer data is not disposable by assumption. Runtime verification remains incomplete until Docker-based startup, connection, and cleanup actually succeed; native PostgreSQL or mocks are not substitutes.
 
-## Fresh Windows remediation acceptance
+## Historical FOUNDATION-02 Windows remediation acceptance
 
-Use PowerShell from the repository root on the published remediation commit. Capture command output and exit codes without rendering `.env` or connection credentials. These gates are still required before FOUNDATION-02 completion:
+The following preserves the already-accepted Foundation procedure for its historical remediation commit. It is not the current AUTH-01 zero-schema expectation; use the migration sequence above for AUTH-01. Capture output without rendering credentials.
 
 1. Record `git rev-parse HEAD`, `git status --short`, `node --version`, `npm --version`, `docker version` and `docker compose version`. Use Node 24.19.0/npm 11.9.0 and a running local Docker Engine 28+.
 2. Set `$env:RAHROW_LOCAL_PROJECT = "rahrow-local-qa-$(Get-Date -Format yyyyMMddHHmmss)"`. Set `$env:POSTGRES_PORT = '55432'` (or a free port) and matching local-only `DATABASE_URL`, following `.env.example`. Keep the same shell and project throughout.
@@ -91,6 +97,6 @@ Use PowerShell from the repository root on the published remediation commit. Cap
 - For a port conflict, update both port and URL. For an image-pull failure, check normal Docker Hub access; do not change host security or use an untrusted mirror.
 - Missing CLI, unavailable daemon/image, incompatible engine, and unhealthy database are real blockers. Use normal local Docker setup; never infer runtime success from configuration.
 - Raw Compose `config` without `--quiet` renders environment values. Do not paste it in shared logs. The wrapper validates quietly and suppresses captured context/engine error details.
-- The NestJS app does not import Prisma or contact PostgreSQL. Future database integration requires separately bounded scope.
+- AUTH-01 imports the generated Prisma client through lazy infrastructure; skeleton startup does not connect. Database use requires external runtime configuration. No application-startup migrations are performed.
 
 Sources checked 2026-10-03: [PostgreSQL support](https://www.postgresql.org/support/versioning/), [official PostgreSQL image](https://hub.docker.com/_/postgres), [Docker PostgreSQL guide](https://docs.docker.com/guides/postgresql/), [port-publishing security](https://docs.docker.com/engine/network/port-publishing/), [Compose health checks](https://docs.docker.com/compose/how-tos/startup-order/), and [Prisma documentation](https://www.prisma.io/docs/orm).
