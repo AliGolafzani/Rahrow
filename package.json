@@ -1,0 +1,32 @@
+{
+  "name": "rahrow",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "npm@11.9.0",
+  "engines": {
+    "node": ">=24.19.0 <25",
+    "npm": ">=11.9.0 <12"
+  },
+  "workspaces": [
+    "packages/config",
+    "packages/contracts",
+    "packages/ui",
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace @rahrow/web",
+    "dev:api": "npm run dev --workspace @rahrow/api",
+    "build:web": "npm run build --workspace @rahrow/web",
+    "build:api": "npm run build --workspace @rahrow/api",
+    "build": "npm run build --workspace @rahrow/contracts && npm run build --workspace @rahrow/ui && npm run build:web && npm run build:api",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "npm run typecheck --workspace @rahrow/contracts --workspace @rahrow/ui --workspace @rahrow/web --workspace @rahrow/api",
+    "test": "node --test scripts/smoke.test.mjs",
+    "check": "npm run lint && npm run typecheck && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@rahrow/config": "0.0.0",
+    "eslint": "9.39.5"
+  }
+}
