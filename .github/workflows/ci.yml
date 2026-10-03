@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  repository-quality:
+    name: repository-quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: rahrow-quality-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Pin npm and verify toolchain
+        run: |
+          npm install --global npm@11.9.0
+          test "$(node --version)" = v24.19.0
+          test "$(npm --version)" = 11.9.0
+      - run: npm ci
+      - run: npm ls --all
+      - run: npm run prisma:validate
+      - run: npm run prisma:generate
+      - run: npm run check
+      - name: Require zero runtime audit findings
+        run: |
+          npm audit --omit=dev --json > "$RUNNER_TEMP/runtime-audit.json"
+          node -e 'const a=require(process.env.RUNNER_TEMP+"/runtime-audit.json"); if(a.metadata?.vulnerabilities?.total !== 0) process.exit(1); console.log("Runtime audit: zero findings.");'
+      - name: Verify tracked repository hygiene
+        run: |
+          git diff --check
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+  local-database:
+    name: local-database
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: rahrow-database-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.19.0'
+          package-manager-cache: false
+      - name: Pin npm and verify toolchain
+        run: |
+          npm install --global npm@11.9.0
+          test "$(node --version)" = v24.19.0
+          test "$(npm --version)" = 11.9.0
+      - run: npm ci
+      - name: Prepare isolated local QA environment
+        run: |
+          project="rahrow-local-qa-$(printf '%s' "$GITHUB_REPOSITORY:$GITHUB_RUN_ID:$GITHUB_RUN_ATTEMPT:local-database" | sha256sum | cut -c1-32)"
+          [[ "$project" =~ ^rahrow-local-qa-[a-f0-9]{32}$ ]]
+          echo "RAHROW_LOCAL_PROJECT=$project" >> "$GITHUB_ENV"
+          cp .env.example .env
+          # Pin all checks to a verified local endpoint; never print .env or a database URL.
+          endpoint="$(docker context inspect "$(docker context show)" --format '{{.Endpoints.docker.Host}}')"
+          [[ "$endpoint" == unix:///* && "$endpoint" != *$'\n'* && "$endpoint" != *$'\r'* ]]
+          unset DOCKER_CONTEXT
+          export DOCKER_HOST="$endpoint"
+          version="$(docker version --format '{{.Server.Version}}')"
+          [[ "$version" =~ ^([0-9]+)\. ]] && (( BASH_REMATCH[1] >= 28 ))
+          echo "DOCKER_HOST=$endpoint" >> "$GITHUB_ENV"
+          echo "DOCKER_CONTEXT=" >> "$GITHUB_ENV"
+          docker compose version
+          echo "Local Docker Engine: $version"
+      - run: npm run db:config
+      - run: npm run prisma:validate
+      - run: npm run prisma:generate
+      - name: Prove fresh isolation before allowing cleanup
+        id: isolation
+        run: |
+          [[ "$RAHROW_LOCAL_PROJECT" =~ ^rahrow-local-qa-[a-f0-9]{32}$ ]]
+          containers="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          networks="$(docker network ls -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          volumes="$(docker volume ls -q)"
+          test -z "$containers"
+          test -z "$networks"
+          if grep -Fxq "${RAHROW_LOCAL_PROJECT}_postgres-data" <<< "$volumes"; then
+            echo "Expected fresh QA volume is already present." >&2
+            exit 1
+          fi
+          # Set BEFORE startup: partially successful startup must still be cleaned.
+          echo "cleanup_eligible=true" >> "$GITHUB_OUTPUT"
+      - name: Start fresh PostgreSQL
+        run: npm run db:up
+      - name: Verify health, loopback port, owned volume and cluster identity
+        run: |
+          id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
+          test -n "$id" && [[ "$id" != *$'\n'* ]]
+          docker inspect "$id" --format '{"health":{{json .State.Health.Status}},"image":{{json .Config.Image}},"ports":{{json .HostConfig.PortBindings}}}' > "$RUNNER_TEMP/postgres-container.json"
+          docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" > "$RUNNER_TEMP/postgres-volume.json"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { assertOwnedVolume } from './scripts/db-local.mjs';
+          const read = name => JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/'+name, 'utf8'));
+          const container = read('postgres-container.json');
+          assert.equal(container.health, 'healthy');
+          assert.equal(container.image, 'postgres:18.6-bookworm');
+          assert.deepEqual(container.ports, {'5432/tcp': [{HostIp:'127.0.0.1', HostPort:'5432'}]});
+          const volumes = read('postgres-volume.json');
+          assert.equal(volumes.length, 1);
+          assertOwnedVolume(volumes[0], process.env.RAHROW_LOCAL_PROJECT);
+          writeFileSync(process.env.RUNNER_TEMP+'/volume-created-at', volumes[0].CreatedAt);
+          NODE
+          docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()' > "$RUNNER_TEMP/cluster-id"
+          grep -Eq '^[0-9]+$' "$RUNNER_TEMP/cluster-id"
+          docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SHOW server_version'
+      - run: npm run db:check
+      - name: Prove unconfirmed reset refuses without removing resources
+        run: |
+          if npm run db:reset; then
+            echo "Unconfirmed reset unexpectedly succeeded." >&2
+            exit 1
+          fi
+          test -n "$(docker ps -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" > /dev/null
+      - name: Verify normal down preserves the same volume
+        run: |
+          npm run db:down
+          containers="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          networks="$(docker network ls -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")"
+          test -z "$containers"
+          test -z "$networks"
+          created="$(docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" --format '{{.CreatedAt}}')"
+          test "$created" = "$(cat "$RUNNER_TEMP/volume-created-at")"
+      - name: Verify restart preserves cluster identity
+        run: |
+          npm run db:up
+          id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
+          test -n "$id" && [[ "$id" != *$'\n'* ]]
+          test "$(docker inspect "$id" --format '{{.State.Health.Status}}')" = healthy
+          current="$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')"
+          test "$current" = "$(cat "$RUNNER_TEMP/cluster-id")"
+          npm run db:check
+      - name: Always reset only this eligible local QA project
+        if: ${{ always() && steps.isolation.outputs.cleanup_eligible == 'true' }}
+        run: |
+          [[ "$RAHROW_LOCAL_PROJECT" =~ ^rahrow-local-qa-[a-f0-9]{32}$ ]]
+          # Capture failure, then still inspect for leftovers; never turn a failed reset green.
+          reset_status=0
+          node scripts/db-local.mjs reset --confirm-local-reset || reset_status=$?
+          leftovers_status=0
+          containers="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")" || leftovers_status=1
+          volumes="$(docker volume ls -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")" || leftovers_status=1
+          networks="$(docker network ls -q --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT")" || leftovers_status=1
+          all_volumes="$(docker volume ls -q)" || leftovers_status=1
+          test -z "$containers$volumes$networks" || leftovers_status=1
+          if grep -Fxq "${RAHROW_LOCAL_PROJECT}_postgres-data" <<< "$all_volumes"; then leftovers_status=1; fi
+          test "$reset_status" -eq 0
+          test "$leftovers_status" -eq 0
+          echo "Scoped QA cleanup verified: no matching containers, volumes or networks."

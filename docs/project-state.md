@@ -4,9 +4,9 @@ Snapshot date: 2026-10-03. This document describes verified work and dependencie
 
 ## CURRENT MILESTONE
 
-Foundation, bounded task **FOUNDATION-02 — Local PostgreSQL + Prisma Baseline: COMPLETE**.
+Foundation, bounded task **FOUNDATION-03 — CI Basics: PARTIAL**. FOUNDATION-02 remains COMPLETE.
 
-Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Ali supplied fresh Windows acceptance evidence for the reset-remediation commit and explicitly authorized recording FOUNDATION-02 as COMPLETE. The live evidence is user-executed, not a Docker run by this cloud executor. The complete Foundation milestone is not complete; FOUNDATION-03 is not authorized. Ali separately approved the merge to `main`, completed as a fast-forward on 2026-10-03.
+Ali approved FOUNDATION-01 and authorized this local-only task on 2026-10-03. Ali supplied fresh Windows acceptance evidence for the reset-remediation commit and explicitly authorized recording FOUNDATION-02 as COMPLETE. The live evidence is user-executed, not a Docker run by this cloud executor. The complete Foundation milestone is not complete. Ali separately authorized the bounded FOUNDATION-03 CI implementation and draft PR; its service acceptance and completion sequence are recorded below. Ali separately approved the FOUNDATION-02 merge to `main`, completed as a fast-forward on 2026-10-03.
 
 ## PROJECT PHASE
 
@@ -25,13 +25,13 @@ FOUNDATION-02 was published on `foundation-02-local-postgres-prisma` at [e45923c
 - Public development-only example values are documented in `.env.example`; actual `.env` and generated Prisma output remain ignored.
 - Official Docker Compose v5.6.0 standalone client checksum and daemon-free configuration validation passed. No Docker daemon, container, database or volume was created by these checks.
 
-No product model, migration, seed/demo data, runtime NestJS database provider, external provider integration, staging/production database, CI, deployment, Meilisearch setup, or product feature has been created.
+No product model, migration, seed/demo data, runtime NestJS database provider, external provider integration, staging/production database, deployment, Meilisearch setup, or product feature has been created. FOUNDATION-03 adds CI configuration only; its execution is not yet verified.
 
 ## COMPLETED RESET REMEDIATION
 
 - The approved minimal reset remediation documents `node scripts/db-local.mjs reset --confirm-local-reset` as the canonical destructive, local-only command. The refusal message now prints that exact command. Parser, explicit argv confirmation, local Docker endpoint restrictions, volume ownership/label checks, package scripts, dependencies and lockfile are unchanged.
 - New subprocess regression tests exercise the real CLI entry point: unconfirmed and incorrect confirmation refuse before Docker; the documented confirmation passes consent and still hits the local-environment guard. A Docker-call tripwire verifies no Docker invocation in these isolated tests. Existing scope/ownership tests remain intact.
-- This is an IMPLEMENTATION DETAIL/tooling correction, not a product question or material ADR. Fresh Windows acceptance for the remediation commit has passed, as supplied by Ali below. No later Foundation task is in progress.
+- This is an IMPLEMENTATION DETAIL/tooling correction, not a product question or material ADR. Fresh Windows acceptance for the remediation commit has passed, as supplied by Ali below. FOUNDATION-03 is now separately authorized; this historical reset evidence remains unchanged.
 
 ## USER-SUPPLIED WINDOWS LIVE EVIDENCE
 
@@ -70,7 +70,7 @@ Ali explicitly attested that all remaining FOUNDATION-02 live acceptance gates p
 - Development-only dependency advisories remain unresolved; both attributed audit observations and exposure limits remain under KNOWN RISKS. No audit suppression or dependency modification is part of this completion update.
 - The PRD is absent from the public repository. Supplied Foundation requirements cover this bounded tooling task; future product behavior still requires the relevant text from Rahrow Lead.
 - Product questions block only their recorded affected behavior. None was resolved or used to block unrelated tooling work.
-- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here. `main` now contains the approved FOUNDATION-02 history and reviewed tree. Merge approval does not authorize FOUNDATION-03 or any additional implementation.
+- Production deployment, production database mutation and secrets changes require explicit human approval. Manual production database mutation remains prohibited. No production action is authorized here. `main` now contains the approved FOUNDATION-02 history and reviewed tree. FOUNDATION-03 proceeds only under its separate bounded authorization. No FOUNDATION-04 or additional implementation is authorized.
 
 ## PRODUCT OPEN QUESTIONS
 
@@ -146,8 +146,18 @@ No provider or hosting choice has been selected. Production hosting remains a se
 - Product requirements, security behavior, transactional correctness and production readiness remain unimplemented/unverified. Keep all 25 product questions open and follow the PRD availability rule.
 - The repository is public. Never publish the private PRD, private conversations, real credentials, local `.env` or generated output without applicable authorization.
 
+## FOUNDATION-03 — CI BASICS
+
+**STATUS: PARTIAL.** Implemented configuration on `foundation-03-ci-basics`, based on approved main commit [1a9b3ea570d09afc809f84f83dd1fac99ed019ad](https://github.com/AliGolafzani/Rahrow/commit/1a9b3ea570d09afc809f84f83dd1fac99ed019ad). Only `.github/workflows/ci.yml`, `docs/ci.md` and this state file are in scope.
+
+- Two Ubuntu 24.04 jobs: `repository-quality` and `local-database`, Node 24.19.0/npm 11.9.0, read-only contents permission, immutable checkout/setup-node pins, no persisted checkout credentials, no cache or secrets.
+- Quality checks use the existing repository aggregate and zero-finding runtime audit. Full development audit remains documented non-gating debt; no dependencies, audit policies, product questions or source tooling were changed.
+- The database job uses the existing local Compose/Prisma tools and a fresh run-derived QA namespace. It checks real connectivity, empty catalog, persistence and guarded cleanup. Its separate concurrency group never cancels active database jobs; quality cancellation is limited to superseded PR work.
+- **GitHub service evidence: NOT RUN / PENDING.** No run URL, run ID, tested service SHA or successful job result is claimed before actual execution. See [ci.md](ci.md) for the exact acceptance sequence.
+- **Author offline checks: PASS** on 2026-10-03: clean `npm ci` using a writable external cache after the default cache path failed, `npm ls --all`, `npm run check` (lint, all typechecks/builds, 2/2 application smoke tests, 8/8 lifecycle tests, 2/2 Prisma baseline tests), standalone Prisma validation/generation, runtime audit with zero findings, `git diff --check`, actionlint 1.7.7 with ShellCheck, embedded Bash syntax checks and standalone daemon-free Compose validation. The initial default-cache installation and a premature Prisma invocation failed locally before the successful install/rerun; no repository dependency change was needed. These checks do not prove GitHub runner or live database execution.
+- Completion remains blocked on real PR-trigger checks, separate merge approval, both automatic main-push jobs passing on the merged SHA, a separate minimal completion/state commit, and both jobs also passing on that final documentation SHA.
+- FOUNDATION-02 Windows acceptance and known development dependency advisories remain preserved above. No product models, migrations, providers, Meilisearch, deployment or branch-protection changes are included.
+
 ## NEXT RECOMMENDED TASK
 
-Propose the next bounded FOUNDATION-03 task for Ali’s separate approval. This merge-status documentation update authorizes no additional implementation.
-
-Stop at this boundary. Do not begin FOUNDATION-03, CI, Meilisearch, product schema, Auth, staging/production infrastructure or any unrelated feature automatically.
+Publish the independently reviewed FOUNDATION-03 branch as a draft PR and obtain actual pull-request workflow evidence. Keep FOUNDATION-03 PARTIAL even after successful PR checks; report merge readiness and wait for Ali’s separate approval. Do not merge or begin FOUNDATION-04 or unrelated work automatically.
