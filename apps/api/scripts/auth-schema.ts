@@ -8,12 +8,22 @@ export const AUTH_MODELS = [
 ] as const;
 
 export type CatalogRelation = { schema: string; name: string; kind: string };
+export type CatalogEnum = { schema: string; name: string; values: string[] };
+export const AUTH_ENUMS: CatalogEnum[] = [{
+  schema: 'public', name: 'AuthenticationMethod', values: ['MOBILE_OTP', 'ADMIN_PASSWORD_TOTP'],
+}];
 export const AUTH_RELATIONS: CatalogRelation[] = [...AUTH_MODELS, '_prisma_migrations']
   .sort()
   .map((name) => ({ schema: 'public', name, kind: 'r' }));
 
 export function assertAuthModels(models: string[]): void {
   assert.deepEqual([...models].sort(), [...AUTH_MODELS]);
+}
+
+export function assertEnums(enums: CatalogEnum[], mode: 'empty' | 'auth'): void {
+  const sorted = [...enums].sort((a, b) => `${a.schema}.${a.name}`.localeCompare(`${b.schema}.${b.name}`, 'en'));
+  assert.deepEqual(sorted, mode === 'empty' ? [] : AUTH_ENUMS,
+    'The schema-qualified enum set and ordered values must exactly match the authorized phase.');
 }
 
 export function assertRelations(relations: CatalogRelation[], mode: 'empty' | 'auth'): void {

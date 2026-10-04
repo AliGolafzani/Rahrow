@@ -1,21 +1,21 @@
 # Rahrow
 
-Foundation is complete. AUTH-01 adds the first bounded Auth/User/RBAC/Audit data and internal service foundation to the approved API-first modular monolith. No authentication endpoints or frontend flows are exposed. See [project state](docs/project-state.md) for verification status; configuration and tooling checks alone do not prove database runtime readiness.
+Foundation and the AUTH-01 persistence foundation are preserved. AUTH-02 adds backend mobile OTP orchestration and five cookie-based authentication endpoints with explicit Fake/local delivery only. Frontend flows remain excluded. See [project state](docs/project-state.md) for verification status; configuration and tooling checks alone do not prove database runtime readiness.
 
-Read [AGENTS.md](AGENTS.md) and [project state](docs/project-state.md) before contributing. The private PRD is not distributed in this repository; obtain the relevant requirements before dependent work. [Product questions](docs/open-questions.md) remain unresolved.
+Read [AGENTS.md](AGENTS.md) and [project state](docs/project-state.md) before contributing. The private PRD is not distributed in this repository; obtain the relevant requirements before dependent work. [Product questions](docs/open-questions.md) retain their minimum blocked scope; OQ-07 is decided and other profile/capability/status questions remain open.
 
 ## Workspace layout
 
 - `apps/web`: Next.js 16 + TypeScript; one neutral placeholder page
 - `apps/api`: NestJS + TypeScript; Auth/User/RBAC/Audit modules, lazy Prisma infrastructure and guarded database tooling
-- `packages/contracts`: independently compiled, type-only public-profile contract package
+- `packages/contracts`: independently compiled, type-only public-profile and authentication contract package
 - `packages/ui`: independently compiled, intentionally empty shared-UI package
 - `packages/config`: shared TypeScript presets and root-consumed ESLint configuration
 - `infra`: local-only PostgreSQL Compose configuration and lifecycle documentation
 - `docs`: existing governance and verified project state
 - `scripts`: built-application smoke checks and guarded local database lifecycle commands
 
-All packages are private npm workspaces. One root lockfile pins the dependency graph. There is no task orchestrator or sibling-app build dependency. The API consumes a type-only public-profile contract; both shared packages still have no runtime exports.
+All packages are private npm workspaces. One root lockfile pins the dependency graph. There is no task orchestrator or sibling-app build dependency. The API consumes type-only public-profile and authentication contracts; both shared packages still have no runtime exports.
 
 ## Prerequisites and installation
 
@@ -78,6 +78,12 @@ The authorized ten-table schema and first migration are documented in [Auth foun
 
 See [local infrastructure instructions](infra/README.md) for clean-state QA, local-only data removal, troubleshooting, and version references.
 
+## Local mobile OTP authentication
+
+See [AUTH-02](docs/auth-02.md) for the five endpoint contracts, strict Origin/custom-header rules, local activation, private Fake harness, fixed session expiry, independent challenges/session families and error/rate-limit behavior. Default Auth is unconfigured and returns 503 without needing a database/key; root 404 and the web skeleton remain unchanged. Explicit local activation requires nonproduction loopback binding and origins; no real SMS provider or reveal endpoint exists. [ADR-0002](docs/decisions/ADR-0002-mobile-otp-http-sessions.md) explains transport and transaction boundaries.
+
+`npm run openapi:generate` regenerates the API specification from the real controllers/DTOs; `npm run openapi:check` verifies freshness. No public Swagger endpoint is exposed. Shared contracts still export no runtime values.
+
 ## Builds and checks
 
 After the root install, either application builds independently:
@@ -104,7 +110,7 @@ npm run check
 - `test`: requires build outputs. Node's built-in test runner verifies database-tooling safety guards and empty workspace exports, starts the actual built API and web separately on ephemeral loopback ports, checks their expected HTTP responses, and stops the child processes. Offline tests do not substitute for `db:up`/`db:check` against Docker PostgreSQL.
 - `check`: lint, type checks, all builds, and smoke tests in that order.
 
-Smoke tests establish built startup with no endpoints. AUTH-01 adds negative-heavy security/privacy/RBAC tests; the [CI workflow](docs/ci.md) separately exercises actual migration, constraints and concurrent state transitions in disposable PostgreSQL. These are no claim of complete auth flows or release readiness.
+Smoke tests preserve no-config startup and root 404. AUTH-01/AUTH-02 add negative-heavy security/privacy/RBAC, HTTP and provider tests; the [CI workflow](docs/ci.md) separately exercises actual migration, constraints and concurrent state transitions in disposable PostgreSQL. Offline checks do not establish real database flow acceptance or release readiness.
 
 Optional dependency inspection:
 
@@ -120,6 +126,6 @@ Next may update generated `next-env.d.ts` during type generation/build. Build di
 
 ## Deferred scope
 
-Complete OTP/SMS/admin login, frontend auth, status lifecycle, profile-completion UX and the final permission matrix are deferred. Meilisearch, S3-compatible storage, other product modules and staging/production actions need separate authorization. AUTH-01 does not resolve product questions or grant production approval.
+Real SMS delivery, admin Password+TOTP login/enrollment/recovery, frontend auth, status lifecycle, profile-completion UX, logout-all-devices and the final permission matrix are deferred. Meilisearch, S3-compatible storage, other product modules and staging/production actions need separate authorization. AUTH-01 does not resolve product questions or grant production approval.
 
 Tooling references: [npm workspaces](https://docs.npmjs.com/cli/v11/using-npm/workspaces/), [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Next.js ESLint](https://nextjs.org/docs/app/api-reference/config/eslint), [NestJS migration requirements](https://docs.nestjs.com/migration-guide), [TypeScript 6](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html).

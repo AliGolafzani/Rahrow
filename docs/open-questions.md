@@ -1,6 +1,6 @@
 # Product open questions
 
-This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner and decides these questions. No question is resolved by this scaffold. All 26 entries below are OPEN.
+This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner and decides these questions. The register now has 25 OPEN and 1 DECIDED entries. AUTH-02 records Ali’s 2026-10-03 email decision and the settled authentication/Dashboard invariant without resolving remaining capability/profile gates.
 
 Use exactly `OPEN`, `DECIDED`, or `SUPERSEDED` for Status. Keep IDs stable. Record Ali’s actual decision, its date, and source when decided; preserve history and reference a replacement when superseded. Do not infer an answer from examples, planned architecture, an ADR, or silence.
 
@@ -42,12 +42,13 @@ PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-pro
 - **ID:** OQ-07
 - **Area:** Onboarding email
 - **Question:** Is email mandatory during onboarding, or requested later during profile completion without blocking onboarding?
-- **Affected scope:** Only email-required UX/validation and actions explicitly dependent on that requirement. Email collection is already required; its UX obligation remains unresolved.
+- **Affected scope:** Email is requested later during profile completion. Initial OTP onboarding/authentication has no email requirement. Email verification and uniqueness behavior are not defined by this decision.
 - **Owner:** Ali (Product Owner)
-- **Status:** OPEN
-- **Decision:** Not decided.
-- **Decision date:** Not set.
-- **Source:** PRD §20 (email requirement) and §6. Related: OQ-14A.
+- **Status:** DECIDED
+- **Decision:** Email is requested later during profile completion and is not mandatory for initial OTP onboarding/authentication.
+- **Decision date:** 2026-10-03.
+- **Source:** Ali’s AUTH-02 product decisions and reviewed implementation plan, 2026-10-03; PRD §20 and §6. Related: OQ-14A.
+- **History:** Previously OPEN from PRD §20 because profile email collection was required but onboarding UX obligation was unresolved. This decision resolves that timing/requirement only.
 
 ### OQ-08 Step reset and reopen
 
@@ -198,11 +199,12 @@ PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-pro
 - **ID:** OQ-14A
 - **Area:** Capability assignments and profile gates
 - **Question:** Which unresolved capabilities are assigned to each actor, and which profile fields must be complete before specific user actions?
-- **Affected scope:** Only the unresolved privileged operations and profile-completion gates. Capability-based RBAC and admin password plus TOTP are already required.
+- **Affected scope:** Remaining capability assignments and action-specific profile-completion gates only. Authentication, account/session creation and Dashboard access are not profile-gated. Capability-based RBAC and admin password plus TOTP remain required.
 - **Owner:** Ali (Product Owner)
 - **Status:** OPEN
-- **Decision:** Not decided.
-- **Decision date:** Not set.
+- **Decision:** Partial settled invariant: incomplete profiles must not block mobile OTP authentication, account/session creation or Dashboard access. Remaining capabilities and action-specific requirements are not decided.
+- **Decision date:** Authentication/Dashboard invariant approved 2026-10-03 by Ali in AUTH-02; remaining question stays OPEN.
+- **History:** Previously wholly OPEN; AUTH-02 settled only the named invariant and does not implement profile-completion UX or the permission matrix.
 - **Source:** Accepted requirement-classification report, OQ-14A; PRD §§3, 6 and 12. Related: OQ-07, OQ-11C, OQ-16A, OQ-16B.
 
 ### OQ-15B Additional public exposure and search semantics

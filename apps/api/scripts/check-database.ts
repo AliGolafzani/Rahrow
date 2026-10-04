@@ -5,8 +5,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Prisma, PrismaClient } from '../src/generated/prisma/client.ts';
 import { getLocalDatabaseUrl, loadLocalEnvironment } from './local-database.ts';
 import {
-  assertAuthModels, assertMigrationHistory, assertRelations, committedMigration,
-  type CatalogRelation, type MigrationRecord,
+  assertAuthModels, assertEnums, assertMigrationHistory, assertRelations, committedMigration,
+  type CatalogEnum, type CatalogRelation, type MigrationRecord,
 } from './auth-schema.ts';
 
 let stage = 'arguments';
@@ -55,6 +55,16 @@ async function checkDatabase(): Promise<void> {
       ORDER BY namespace.nspname, relation.relname, relation.relkind
     `;
     assertRelations(relations, mode);
+    const enums = await prisma.$queryRaw<CatalogEnum[]>`
+      SELECT namespace.nspname AS schema, type_row.typname AS name,
+        array_agg(enum_row.enumlabel::text ORDER BY enum_row.enumsortorder) AS values
+      FROM pg_catalog.pg_type AS type_row
+      JOIN pg_catalog.pg_namespace AS namespace ON namespace.oid = type_row.typnamespace
+      JOIN pg_catalog.pg_enum AS enum_row ON enum_row.enumtypid = type_row.oid
+      WHERE left(namespace.nspname, 3) <> 'pg_' AND namespace.nspname <> 'information_schema'
+      GROUP BY namespace.nspname, type_row.typname ORDER BY namespace.nspname, type_row.typname
+    `;
+    assertEnums(enums, mode);
     if (mode === 'empty') {
       console.log('PASS: Prisma SELECT 1, local read-only connection, zero non-system relations before migration.');
       return;
@@ -88,7 +98,7 @@ async function checkDatabase(): Promise<void> {
         SELECT tablename, indexname, indexdef FROM pg_catalog.pg_indexes
         WHERE schemaname = 'public' ORDER BY tablename, indexname
       `;
-      const snapshot = JSON.stringify({ relations, migrations, columns, constraints, indexes }, null, 2);
+      const snapshot = JSON.stringify({ relations, enums, migrations, columns, constraints, indexes }, null, 2);
       if (snapshotAction === '--write-snapshot') await writeFile(snapshotPath, `${snapshot}\n`, { flag: 'wx', mode: 0o600 });
       else assert.equal(`${snapshot}\n`, await readFile(snapshotPath, 'utf8'), 'Migration history and schema must remain unchanged.');
     }

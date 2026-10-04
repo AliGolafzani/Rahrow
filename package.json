@@ -23,7 +23,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "npm run typecheck --workspace @rahrow/contracts --workspace @rahrow/ui --workspace @rahrow/web --workspace @rahrow/api",
     "test": "node --test scripts/smoke.test.mjs && npm run test:db && npm run test:auth --workspace @rahrow/api",
-    "check": "npm run lint && npm run typecheck && npm run build && npm test",
+    "check": "npm run lint && npm run typecheck && npm run build && npm run openapi:check && npm test",
     "db:config": "node scripts/db-local.mjs config",
     "db:up": "node scripts/db-local.mjs up",
     "db:down": "node scripts/db-local.mjs down",
@@ -35,10 +35,16 @@
     "test:db": "node --test scripts/db-local.test.mjs && npm run test:db --workspace @rahrow/api",
     "db:check:empty": "npm run db:check:empty --workspace @rahrow/api",
     "db:migrate": "npm run db:migrate --workspace @rahrow/api",
-    "test:auth:db": "npm run test:auth:db --workspace @rahrow/api"
+    "test:auth:db": "npm run test:auth:db --workspace @rahrow/api",
+    "test:auth:flow:db": "npm run test:auth:flow:db --workspace @rahrow/api",
+    "openapi:generate": "npm run openapi:generate --workspace @rahrow/api",
+    "openapi:check": "npm run openapi:check --workspace @rahrow/api"
   },
   "devDependencies": {
     "@rahrow/config": "0.0.0",
     "eslint": "9.39.5"
+  },
+  "scarfSettings": {
+    "enabled": false
   }
 }

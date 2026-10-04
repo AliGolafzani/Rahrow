@@ -5,8 +5,8 @@ import { Prisma, PrismaClient } from '../src/generated/prisma/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { getLocalDatabaseUrl } from './local-database.ts';
 import {
-  AUTH_MODELS, AUTH_RELATIONS, assertAuthModels, assertDisposableAuthTestEnvironment,
-  assertMigrationHistory, assertRelations, committedMigration, type MigrationRecord,
+  AUTH_ENUMS, AUTH_MODELS, AUTH_RELATIONS, assertAuthModels, assertDisposableAuthTestEnvironment,
+  assertEnums, assertMigrationHistory, assertRelations, committedMigration, type MigrationRecord,
 } from './auth-schema.ts';
 
 const environment = {
@@ -89,6 +89,19 @@ test('migration verification rejects missing, repeated, modified and incomplete 
     { ...valid, finished_at: null }, { ...valid, rolled_back_at: new Date(2) },
     { ...valid, applied_steps_count: 0 }, { ...valid, logs: 'failed' },
   ]) assert.throws(() => assertMigrationHistory([invalid], expected));
+});
+
+test('exact schema verification rejects missing, extra, reordered and wrong-schema enum values', () => {
+  assertEnums([], 'empty');
+  assertEnums(AUTH_ENUMS, 'auth');
+  assert.throws(() => assertEnums(AUTH_ENUMS, 'empty'));
+  assert.throws(() => assertEnums([], 'auth'));
+  const valid = AUTH_ENUMS[0]!;
+  for (const enums of [
+    [valid, valid], [{ ...valid, schema: 'other' }], [{ ...valid, name: 'Unrelated' }],
+    [{ ...valid, values: valid.values.slice(1) }], [{ ...valid, values: [...valid.values, 'UNVERIFIED'] }],
+    [{ ...valid, values: [...valid.values].reverse() }],
+  ]) assert.throws(() => assertEnums(enums, 'auth'));
 });
 
 test('database mutation tests refuse non-CI, normal local and unconfirmed targets', () => {
