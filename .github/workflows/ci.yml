@@ -144,6 +144,10 @@ jobs:
         env:
           RAHROW_AUTH_DATABASE_TESTS: disposable-local-ci
         run: npm run test:auth:db
+      - name: Check real AUTH-02 orchestration and snapshot secret-free persisted state
+        env:
+          RAHROW_AUTH_DATABASE_TESTS: disposable-local-ci
+        run: node apps/api/scripts/check-auth-flow-database.ts --write-snapshot "$RUNNER_TEMP/auth-flow-snapshot.json"
       - name: Prove unconfirmed reset refuses without removing resources
         run: |
           if npm run db:reset; then
@@ -162,6 +166,8 @@ jobs:
           created="$(docker volume inspect "${RAHROW_LOCAL_PROJECT}_postgres-data" --format '{{.CreatedAt}}')"
           test "$created" = "$(cat "$RUNNER_TEMP/volume-created-at")"
       - name: Verify restart preserves cluster identity
+        env:
+          RAHROW_AUTH_DATABASE_TESTS: disposable-local-ci
         run: |
           npm run db:up
           id="$(docker ps -aq --filter "label=com.docker.compose.project=$RAHROW_LOCAL_PROJECT" --filter label=com.docker.compose.service=postgres)"
@@ -170,6 +176,7 @@ jobs:
           current="$(docker exec "$id" psql -U rahrow_local -d rahrow_local -Atc 'SELECT system_identifier FROM pg_control_system()')"
           test "$current" = "$(cat "$RUNNER_TEMP/cluster-id")"
           node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/auth-migration-snapshot.json"
+          node apps/api/scripts/check-auth-flow-database.ts --expect-snapshot "$RUNNER_TEMP/auth-flow-snapshot.json"
       - name: Independently verify retained-empty Foundation migration path
         run: |
           # The direct-fresh path above completed. Reuse only this proven-owned disposable namespace.

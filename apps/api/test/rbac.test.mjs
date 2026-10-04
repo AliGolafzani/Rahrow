@@ -7,6 +7,7 @@ import { RbacService } from '../dist/modules/rbac/rbac.service.js';
 import { CapabilitiesGuard } from '../dist/modules/rbac/capabilities.guard.js';
 import { RequireCapability, REQUIRED_CAPABILITY } from '../dist/modules/rbac/require-capabilities.decorator.js';
 import { createSessionToken } from '../dist/modules/auth/auth.security.js';
+import { TrustedSessionResolver } from '../dist/modules/auth/auth.guard.js';
 
 function context(handler, request) {
   return { getHandler: () => handler, getClass: () => class {}, switchToHttp: () => ({ getRequest: () => request }) };
@@ -22,11 +23,11 @@ test('singular capability requirements reject wildcards, arrays and role-name sh
 test('guard fails closed for missing requirements and ignores spoofed request identity/roles', async () => {
   const handler = () => {};
   const reflector = new Reflector();
-  const guard = new CapabilitiesGuard(reflector, { resolveSession: async () => null }, { permits: async () => true });
+  const guard = new CapabilitiesGuard(reflector, new TrustedSessionResolver({ resolveSession: async () => null }, { cookieName: '__Host-rahrow_session', allowedOrigins: ['http://127.0.0.1:3000'], assertAvailable() {} }), { permits: async () => true });
   await assert.rejects(guard.canActivate(context(handler, {})), { status: 403 });
   Reflect.defineMetadata(REQUIRED_CAPABILITY, 'fixture.read', handler);
-  await assert.rejects(guard.canActivate(context(handler, { user: { id: randomUUID(), roles: ['Super Admin'] } })), { status: 401 });
-  await assert.rejects(guard.canActivate(context(handler, { headers: { authorization: `Bearer ${createSessionToken().token}` }, user: { roles: ['Super Admin'] } })), { status: 401 });
+  await assert.rejects(guard.canActivate(context(handler, { method: 'GET', headers: { 'x-rahrow-auth': '1' }, user: { id: randomUUID(), roles: ['Super Admin'] } })), { status: 401 });
+  await assert.rejects(guard.canActivate(context(handler, { method: 'GET', headers: { 'x-rahrow-auth': '1', authorization: `Bearer ${createSessionToken().token}` }, user: { roles: ['Super Admin'] } })), { status: 401 });
 });
 
 test('current capability assignment controls access independently of role labels', async () => {
@@ -37,8 +38,9 @@ test('current capability assignment controls access independently of role labels
   } });
   const handler = () => {};
   Reflect.defineMetadata(REQUIRED_CAPABILITY, 'fixture.read', handler);
-  const guard = new CapabilitiesGuard(new Reflector(), { resolveSession: async () => ({ userId: id, authenticationMethod: 'MOBILE_OTP' }) }, service);
-  const request = { headers: { authorization: `Bearer ${createSessionToken().token}` }, user: { roles: ['Super Admin'] } };
+  const resolver = new TrustedSessionResolver({ resolveSession: async () => ({ userId: id, authenticationMethod: 'MOBILE_OTP' }) }, { cookieName: '__Host-rahrow_session', allowedOrigins: ['http://127.0.0.1:3000'], assertAvailable() {} });
+  const guard = new CapabilitiesGuard(new Reflector(), resolver, service);
+  const request = { method: 'GET', headers: { 'x-rahrow-auth': '1', cookie: `__Host-rahrow_session=${createSessionToken().token}` }, user: { roles: ['Super Admin'] } };
   await assert.rejects(guard.canActivate(context(handler, request)), { status: 403 });
   granted = true;
   assert.equal(await guard.canActivate(context(handler, request)), true);

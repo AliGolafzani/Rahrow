@@ -18,24 +18,28 @@
     "test:auth": "node --test test/*.test.mjs",
     "test:auth:db": "npm run build && node scripts/check-auth-database.ts",
     "predev": "npm run prepare:types",
-    "prepare:types": "npm run build --workspace @rahrow/contracts && npm run prisma:generate"
+    "prepare:types": "npm run build --workspace @rahrow/contracts && npm run prisma:generate",
+    "test:auth:flow:db": "npm run build && node scripts/check-auth-flow-database.ts",
+    "openapi:generate": "npm run build && node scripts/generate-auth-openapi.mjs",
+    "openapi:check": "node scripts/generate-auth-openapi.mjs --check"
   },
   "dependencies": {
     "@nestjs/common": "12.1.2",
     "@nestjs/core": "12.1.2",
     "@nestjs/platform-express": "12.1.2",
-    "reflect-metadata": "0.2.2",
-    "rxjs": "7.8.2",
-    "@prisma/client": "7.10.0",
+    "@nestjs/swagger": "12.0.2",
     "@prisma/adapter-pg": "7.10.0",
-    "pg": "8.23.1"
+    "@prisma/client": "7.10.0",
+    "pg": "8.23.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "@nestjs/cli": "12.0.8",
     "@rahrow/config": "0.0.0",
-    "@types/node": "24.19.1",
-    "typescript": "6.0.3",
     "@rahrow/contracts": "0.0.0",
-    "prisma-cli": "npm:prisma@7.10.0"
+    "@types/node": "24.19.1",
+    "prisma-cli": "npm:prisma@7.10.0",
+    "typescript": "6.0.3"
   }
 }
