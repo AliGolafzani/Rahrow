@@ -1,6 +1,10 @@
 import { randomInt } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import { test, expect, type AuthHarness } from './fixtures';
+import { diagnoseFailedAlert } from './temporary-alert-diagnostics';
+
+// Temporary after-failure observation; the original assertions and selectors stay unchanged.
+test.afterEach(async ({ page }, info) => { await diagnoseFailedAlert(page, info); });
 
 const mobileField = (page: Page) => page.getByRole('textbox', { name: 'شماره همراه', exact: true });
 const codeField = (page: Page) => page.getByRole('textbox', { name: 'کد یک‌بارمصرف', exact: true });
