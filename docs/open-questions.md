@@ -4,7 +4,7 @@ This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner 
 
 Use exactly `OPEN`, `DECIDED`, or `SUPERSEDED` for Status. Keep IDs stable. Record Ali’s actual decision, its date, and source when decided; preserve history and reference a replacement when superseded. Do not infer an answer from examples, planned architecture, an ADR, or silence.
 
-Only the listed affected scope is blocked by each unresolved question, once implementation is authorized. Independent authorized work can continue. The governance-only task does not authorize implementation.
+Only the listed affected scope is blocked by each unresolved question, once implementation is authorized. Independent authorized work can continue. This register alone does not authorize implementation.
 
 ## Sources and coverage
 
@@ -22,6 +22,12 @@ The six product topics explicitly listed in PRD §20 map as follows:
 The first three are consolidated with their expanded product questions from the accepted report so one decision does not have competing records. The report supplies 22 product subquestions; the three other explicit PRD topics bring the total to 25.
 
 PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-provider contracts, and production hosting/topology. These are TECHNICAL DECISIONS, tracked in `project-state.md` and documented in ADRs only when material. They are intentionally absent from this product register. IMPLEMENTATION DETAILS belong in neither register. Escalate only an actual product tradeoff rather than relabeling an entire technical topic.
+
+## Settled AUTH-03 product decisions (2026-10-05)
+
+Ali's approved AUTH-03 requirements and subsequent active-challenge decision preserve the existing register: OQ-07 is DECIDED and OQ-14A/OQ-14D remain OPEN. Unified OTP authentication does not require email/profile completion and reaches the minimal dashboard. Success returns to the originally intended permitted internal destination, otherwise `/dashboard`; unsafe or unauthorized targets use that fallback.
+
+Successful resend selects the new active challenge only in the current page. There is no previous-challenge selector or “use previous code” action. Failed resend retains the current challenge. Older unexpired backend challenges remain independent and may still succeed in another tab/device with that context; the frontend must not invalidate or consume them. This records a frontend UX decision, not a change to AUTH-02 semantics. The final approved brand palette is Navy `#0E3556`, Orange `#F26722`, Cream `#FBF6EB`; exact canonical-logo integration remains an asset dependency, not a new authentication question.
 
 ## Register
 

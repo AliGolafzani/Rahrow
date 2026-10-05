@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Rahrow skeleton',
+  title: 'راهرو',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="fa" dir="rtl">
       <body>{children}</body>
     </html>
   );

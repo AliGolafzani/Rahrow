@@ -22,7 +22,7 @@
     "build": "npm run build --workspace @rahrow/contracts && npm run build --workspace @rahrow/ui && npm run build:web && npm run build:api",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "npm run typecheck --workspace @rahrow/contracts --workspace @rahrow/ui --workspace @rahrow/web --workspace @rahrow/api",
-    "test": "node --test scripts/smoke.test.mjs && npm run test:db && npm run test:auth --workspace @rahrow/api",
+    "test": "node --test scripts/smoke.test.mjs && npm run test:db && npm run test:auth --workspace @rahrow/api && npm run test:web",
     "check": "npm run lint && npm run typecheck && npm run build && npm run openapi:check && npm test",
     "db:config": "node scripts/db-local.mjs config",
     "db:up": "node scripts/db-local.mjs up",
@@ -38,9 +38,13 @@
     "test:auth:db": "npm run test:auth:db --workspace @rahrow/api",
     "test:auth:flow:db": "npm run test:auth:flow:db --workspace @rahrow/api",
     "openapi:generate": "npm run openapi:generate --workspace @rahrow/api",
-    "openapi:check": "npm run openapi:check --workspace @rahrow/api"
+    "openapi:check": "npm run openapi:check --workspace @rahrow/api",
+    "test:web": "node --experimental-strip-types --test apps/web/test/*.test.mjs apps/web/e2e/*.test.mjs",
+    "test:web:e2e": "playwright test --config apps/web/playwright.config.ts",
+    "test:web:e2e:local": "node scripts/run-web-contract-tests.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "1.58.2",
     "@rahrow/config": "0.0.0",
     "eslint": "9.39.5"
   },

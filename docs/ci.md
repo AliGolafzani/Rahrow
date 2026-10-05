@@ -58,3 +58,74 @@ AUTH-02 keeps both existing jobs and every Foundation/AUTH-01 gate. The aggregat
 `npm run test:auth:flow:db` is guarded like the AUTH-01 write runner; it must not be made runnable against an unverified developer or production database. Offline unit/service mocks do not establish this live evidence. Publication is an authorized draft PR only, after local/cloud checks and independent review. Actual exact-head CI must pass before acceptance is claimed; green checks do not authorize merge or deployment.
 
 Swagger generation uses pinned Nest-compatible `@nestjs/swagger`. Its transitive install telemetry is explicitly disabled by root `scarfSettings.enabled=false`; no telemetry consent, runtime service or public documentation route is introduced. The zero-runtime-audit gate remains unchanged.
+
+## AUTH-03 browser acceptance
+
+The existing `repository-quality` and `local-database` job names, permissions, timeout,
+Foundation lifecycle checks, 81 automated baseline tests, 15 AUTH-01 live invariants,
+and 21 AUTH-02 live orchestration checks are preserved. Browser checks are additive.
+The local-database job builds Next separately, installs the Chromium revision supplied
+by exactly pinned `@playwright/test`, and runs `npm run test:web:e2e` **after** the
+AUTH-02 same-cluster persisted-state comparison and **before** the retained-empty
+Foundation reset. This ordering prevents the new fixture rows from changing the
+previously established AUTH-02 checkpoint. Canonical eligible scoped cleanup still
+runs with `always()` and retains all existing ownership and leftover checks.
+
+The Playwright worker owns an in-process, loopback Nest test application with actual
+AUTH-02 controllers, DTO validation, safeguards, `MobileOtpService`, real PostgreSQL
+repositories, and `FakeOtpDeliveryProvider`. It applies the existing disposable CI
+opt-in/namespace guard, validates the local-only database URL, and verifies the expected
+database/user identity before using the database. Default rate budgets, cooldown,
+attempt limit, lifetimes, Origin rules, session rules and schema are not weakened.
+Tests can advance an injected clock or inject a bounded one-shot service failure
+in their own process. A fresh per-test MAC key isolates rate namespaces without
+resetting or deleting the existing acceptance evidence.
+
+After a browser request returns its ordinary `challengeId`, the same worker retrieves
+the exact delivery with its owned Fake provider's `getDelivery(challengeId)`. There
+is no OTP-reveal HTTP route, file, log, browser API, static code, production switch,
+or real SMS provider. The separately built Next server is started with server-only
+`RAHROW_API_ORIGIN=http://127.0.0.1:3101` and
+`RAHROW_WEB_ORIGIN=http://127.0.0.1:3100`. The browser uses the same-origin forwarding
+routes and HttpOnly cookies; it never receives a bearer in JSON or storage.
+
+Screenshots, video, traces, HTML reports, request/response dumps, and automatic
+assertion diagnostics are disabled because they can contain OTPs, cookies or private
+account data. The custom reporter emits only static test names, source line numbers,
+status and totals. No browser artifacts are uploaded. Do not override the reporter
+or enable Playwright debug/tracing while testing private auth data.
+
+### Docker-less authoring checks
+
+After `npm run build`, a local, explicitly separate contract-only browser check is:
+
+```
+RAHROW_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:web:e2e:local
+```
+
+Omit `RAHROW_CHROMIUM_EXECUTABLE` when the pinned Playwright Chromium is installed.
+This mode keeps the same real Nest HTTP/service/Fake path but substitutes a test-only
+in-memory contract store for persistence. The browser config refuses `CI=true` in
+contract mode; explicitly labeled Node HTTP/fixture tests may still use that contract
+store inside the repository-quality job. Contract checks do not prove
+PostgreSQL transactions, locking, concurrency, migration, audit persistence or the
+live browser gate. The default command requires the unchanged guarded disposable
+GitHub database environment and never silently falls back to contract mode. Missing
+Docker/DB is **BLOCKED** for live acceptance, not a reason to install a daemon,
+relax the guard, skip the gate, or claim completion. Both commands require a separately
+built Next app and compiled API; browser readiness never launches a development server.
+
+The browser suite contains 27 explicit scenarios (including three viewport cases):
+guest/unknown navigation, protected entry through OTP, established-session entry,
+strict returns, exact mobile/OTP input, invalid/expired/exhausted/consumed outcomes,
+newest-only resend and older-context success in another browser context, failed resend,
+actual default target throttling, verification throttling, service/network failure,
+duplicate submission, interrupted proof before and after commit, session bootstrap and
+expiry, logout failure and retry, change-number/reload state reset, actual Back/Forward
+history, semantic keyboard controls, responsive bounds and reduced-motion preference.
+Test collection or HTTP contract success is not evidence these browser scenarios ran.
+
+Six additional Node tests cover fixture construction/default safeguards, all five actual
+Nest endpoints without reveal routes, built Next dispatch/SSR/redirect/no-store/cookie
+boundaries against that fixture, and artifact privacy. These are contract/tooling checks
+in the normal aggregate, separately reported from the guarded PostgreSQL browser suite.

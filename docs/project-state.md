@@ -1,8 +1,23 @@
 # Rahrow project state
 
-Snapshot date: 2026-10-04. This document describes verified work and dependencies, not completion of requirements merely listed in the PRD.
+Snapshot date: 2026-10-05. This document describes verified work and dependencies, not completion of requirements merely listed in the PRD.
 
 ## CURRENT MILESTONE
+
+**AUTH-03 — User Web Authentication Experience: PARTIAL; local implementation and author offline/HTTP checks passed, browser/live/visual acceptance and independent review remain pending. No publication authorized.** Ali approved the implementation plan, final board palette and active-challenge resend UX on 2026-10-05. Remote main and cloned origin/main were independently verified as exact `f767de2ac08ed8e09ced3961c1c256a305858960` before creating local branch `auth-03-web-auth-experience`.
+
+- Scope: unified Persian mobile/OTP UI, strict same-origin forwarding of existing AUTH-02 operations, direct server session resolution, canonical permitted return routing, no-store private surfaces, minimal protected dashboard and logout. No backend guard/rate-limit/schema/migration change or future product expansion.
+- Successful resend selects the new active challenge only on that page, with no earlier-code selector. Failed resend preserves current state. Older backend challenges remain independent, including another tab/device. Profile completeness/email do not gate authentication or dashboard. OQ-07 remains DECIDED; OQ-14A/OQ-14D remain OPEN.
+- Final palette: Navy `#0E3556`, Orange `#F26722`, Cream `#FBF6EB`. Exact canonical logo integration is blocked on an isolated authorized asset; the private board and a recreated mark are not included.
+- Author verification on Node 24.19.0/npm 11.9.0: clean `npm ci`, `npm ls --all`, Prisma validate/generate and full `npm run check` PASS. The aggregate preserves 81 baseline tests (2 smoke, 8 lifecycle, 6 schema/tooling, 65 auth) and adds 60 web/fixture/actual-HTTP tests, all 141 passing with zero failures/skips. The 60 new tests also pass with `CI=true`. Built Next-to-Nest/Fake checks use a clearly labeled in-memory contract store, not PostgreSQL evidence.
+- Independent review of the initial tree found two defects: a missing cold web declaration prerequisite and a proxy503 uncertainty classification gap. Both are corrected in the replacement source. A fresh source-only directory (no dependencies, contract declarations, Next output or Prisma generated files) passed clean install, Prisma validation/generation and the complete aggregate; proxy-to-client/form-decision regressions cover lost/malformed upstream verification and rotation responses without mutation replay. Final independent replacement-tree signoff is still pending.
+- Final browser test source compiles and lists 27 cases, but browser assertions/visual/keyboard acceptance are BLOCKED here: installed Chromium fails at socket creation with EPERM before loading the app; official pinned headless-shell download fails on a truncated non-ZIP response; the supported cloud browser denies the loopback page with ERR_BLOCKED_BY_CLIENT. No access workaround, tunnel or security-setting change was used. Actual Docker/PostgreSQL live acceptance, including 15 AUTH-01 and 21 AUTH-02 checks, remains unrun for this AUTH-03 snapshot and is preserved in CI.
+- Runtime audit PASS with zero findings; full audit remains FAIL/non-gating with the same 9 high development findings. Source comparisons preserve backend runtime/shared contracts/Prisma schema and migrations exactly. Workflow YAML and 31 embedded Bash blocks parse; relative documentation links and whitespace checks pass. Contrast calculations pass for functional text (navy/cream 11.72:1, primary button 5.14:1, muted/cream 5.67:1, error/cream 7.07:1); these calculations are not visual/browser or screen-reader acceptance.
+- Publication, remote branch/PR, exact-SHA GitHub CI and deployment are not performed or implied. Independent final-snapshot review and Ali's subsequent publication approval remain required. Runtime audit policy and known development-tooling debt are unchanged.
+
+See [AUTH-03](auth-03.md), [ADR-0003](decisions/ADR-0003-web-auth-boundary.md), and [product decisions](open-questions.md). This explicit AUTH-03 authorization supersedes historical statements below that no frontend/AUTH-03 work was authorized; historical acceptance evidence remains preserved.
+
+## PRESERVED AUTH-02 HISTORY
 
 **AUTH-02 — Mobile OTP Authentication Orchestration: COMPLETE; reviewed implementation, independent offline QA and live PR/merged-main acceptance passed.** Ali approved the reviewed plan and concurrent multi-device sessions on 2026-10-03, and this separate state-only completion update on 2026-10-04. Baseline main was `0f7675ea1dae20dbfd679a42f32ffd9ba3b3b00d`; [PR #3](https://github.com/AliGolafzani/Rahrow/pull/3) preserved reviewed head `bd9902bebc59618fdb4c59b7f6367598bdf298f5` and tree `964eafc900e30bb07db3ecc5ae74572bd49cf4a3` in main merge commit [9d4a69e9fd488aa23b2dc949f3e8dac34d5e5718](https://github.com/AliGolafzani/Rahrow/commit/9d4a69e9fd488aa23b2dc949f3e8dac34d5e5718). PR #3 was merged through the AliGolafzani GitHub account during verification, outside the executor’s own merge action.
 
@@ -201,4 +216,4 @@ No provider or hosting choice has been selected. Production hosting remains a se
 
 ## NEXT RECOMMENDED TASK
 
-Verify the automatic main CI run on this final state-only documentation SHA against the closure gate above, then stop. AUTH-03, production, real SMS, frontend auth and admin Password+TOTP require separate approval. OQ-14A/OQ-14D remain OPEN, OQ-07 remains DECIDED, and known development-tooling advisories remain unresolved.
+Finish local AUTH-03 verification and independent review of a frozen source snapshot, then stop for Ali's publication approval. Exact logo, live PostgreSQL/browser acceptance and any unavailable assistive-technology checks must be reported explicitly. Do not expand into production, real SMS, admin authentication or full dashboard/landing. Preserve OQ-07 DECIDED and OQ-14A/OQ-14D OPEN, as well as the existing development audit debt.
