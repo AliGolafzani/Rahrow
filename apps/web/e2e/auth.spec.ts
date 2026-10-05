@@ -1,10 +1,6 @@
 import { randomInt } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import { test, expect, type AuthHarness } from './fixtures';
-import { diagnoseFailedAlert } from './temporary-alert-diagnostics';
-
-// Temporary after-failure observation; the original assertions and selectors stay unchanged.
-test.afterEach(async ({ page }, info) => { await diagnoseFailedAlert(page, info); });
 
 const mobileField = (page: Page) => page.getByRole('textbox', { name: 'شماره همراه', exact: true });
 const codeField = (page: Page) => page.getByRole('textbox', { name: 'کد یک‌بارمصرف', exact: true });
@@ -120,7 +116,7 @@ test('invalid OTP stays on challenge and valid proof remains usable', async ({ p
   await page.goto('/login');
   const challenge = await requestCode(page, auth);
   expect((await verifyCode(page, wrongCode(challenge.code))).status()).toBe(401);
-  await expect(page.getByRole('alert')).toContainText(errorText.invalid);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.invalid);
   expect((await verifyCode(page, challenge.code)).status()).toBe(200);
   await expect(page).toHaveURL(/\/dashboard$/);
 });
@@ -130,15 +126,15 @@ test('expired and exhausted OTP are distinguished and never imply a session', as
   const expired = await requestCode(page, auth);
   auth.advance(300_001);
   expect((await verifyCode(page, expired.code)).status()).toBe(401);
-  await expect(page.getByRole('alert')).toContainText(errorText.expired);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.expired);
   await page.goto('/login');
   const exhausted = await requestCode(page, auth);
   for (let attempt = 0; attempt < 5; attempt++) {
     expect((await verifyCode(page, wrongCode(exhausted.code))).status()).toBe(401);
-    await expect(page.getByRole('alert')).toContainText(errorText.invalid);
+    await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.invalid);
   }
   expect((await verifyCode(page, exhausted.code)).status()).toBe(401);
-  await expect(page.getByRole('alert')).toContainText(errorText.exhausted);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.exhausted);
   await expect(logoutButton(page)).toHaveCount(0);
 });
 
@@ -186,7 +182,7 @@ test('failed resend preserves the active challenge and typed code', async ({ pag
   await allowResend(page, auth);
   auth.failNext('requestOtp', 'AUTH_DELIVERY_UNAVAILABLE');
   await resendButton(page).click();
-  await expect(page.getByRole('alert')).toContainText(errorText.delivery);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.delivery);
   expect(await codeField(page).inputValue() === current.code).toBe(true);
   expect((await verifyCode(page, current.code)).status()).toBe(200);
   await expect(page).toHaveURL(/\/dashboard$/);
@@ -210,7 +206,7 @@ test('actual target throttling disables resend and keeps current proof', async (
     current = { ...current, challengeId: body.challengeId, code: auth.codeFor(body.challengeId) };
   }
   expect(throttled).toBe(true);
-  await expect(page.getByRole('alert')).toContainText(errorText.throttled);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.throttled);
   await expect(resendButton(page)).toBeDisabled();
   expect((await verifyCode(page, current.code)).status()).toBe(200);
 });
@@ -220,7 +216,7 @@ test('request unavailable is recoverable without pretending delivery or login su
   auth.failNext('requestOtp');
   await mobileField(page).fill(freshMobile());
   await sendButton(page).click();
-  await expect(page.getByRole('alert')).toContainText(errorText.unavailable);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.unavailable);
   await expect(codeField(page)).toHaveCount(0);
   await expect(sendButton(page)).toBeEnabled();
   await requestCode(page, auth);
@@ -270,7 +266,7 @@ test('logout failure is explicit and retry succeeds without restoring protected 
   auth.failNext('logout');
   await logoutButton(page).click();
   await expect(page.getByRole('heading', { name: 'وضعیت ورود روشن نیست' })).toBeVisible();
-  await expect(page.getByRole('alert')).toContainText('خروج تأیید نشد');
+  await expect(page.locator('.logout-control').getByRole('alert')).toContainText('خروج تأیید نشد');
   expect((await context.cookies()).some(cookie => cookie.name === 'rahrow_local_session')).toBe(true);
   await expect(logoutButton(page)).toBeEnabled();
   await logoutButton(page).click();
@@ -360,7 +356,7 @@ test('verification throttle disables repeat attempts until backend retry interva
   const challenge = await requestCode(page, auth);
   auth.failNext('verifyOtp', 'AUTH_THROTTLED');
   expect((await verifyCode(page, challenge.code)).status()).toBe(429);
-  await expect(page.getByRole('alert')).toContainText(errorText.throttled);
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText(errorText.throttled);
   await expect(verifyButton(page)).toBeDisabled();
   await page.clock.fastForward(2_001);
   await expect(verifyButton(page)).toBeEnabled();
@@ -379,7 +375,7 @@ test('interrupted verification checks session before offering a new proof attemp
   await page.route('**/api/v1/auth/otp/verify', route => route.abort('connectionfailed'));
   await codeField(page).fill(challenge.code);
   await verifyButton(page).click();
-  await expect(page.getByRole('alert')).toContainText('ورود تأیید نشد');
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText('ورود تأیید نشد');
   expect(checks).toBeGreaterThan(0);
   expect(mutations).toBe(1);
   await expect(verifyButton(page)).toBeEnabled();
@@ -431,7 +427,7 @@ test('public navigation logout network failure remains explicit and retryable', 
   await expect(logoutButton(page)).toBeVisible();
   await page.route('**/api/v1/auth/logout', route => route.abort('connectionfailed'));
   await logoutButton(page).click();
-  await expect(page.getByRole('alert')).toContainText('خروج تأیید نشد');
+  await expect(page.locator('.logout-control').getByRole('alert')).toContainText('خروج تأیید نشد');
   await expect(page.getByRole('button', { name: 'تلاش دوباره برای خروج' })).toBeEnabled();
   await expect(page).toHaveURL('http://127.0.0.1:3100/');
   await page.unroute('**/api/v1/auth/logout');
@@ -526,7 +522,7 @@ test('valid unavailable verification response blocks another proof until session
   await expect(verifyButton(page)).toHaveCount(0);
   expect(proofs).toBe(1);
   release();
-  await expect(page.getByRole('alert')).toContainText('ورود تأیید نشد');
+  await expect(page.locator('.auth-form form').getByRole('alert')).toContainText('ورود تأیید نشد');
   await expect(verifyButton(page)).toBeEnabled();
   expect(await codeField(page).inputValue() === challenge.code).toBe(true);
   expect(proofs).toBe(1);
