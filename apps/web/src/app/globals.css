@@ -52,6 +52,15 @@ h1, h2, p { margin-top: 0; }
   letter-spacing: -1px;
   text-decoration: none;
 }
+.brand-mark {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  margin-inline-end: 10px;
+  object-fit: contain;
+  background: var(--cream);
+}
 .brand-placement-light { color: var(--cream); }
 .brand-placement-light:focus-visible { outline-color: var(--cream); }
 .editorial-copy { align-self: center; padding-block: 75px 96px; }
@@ -193,6 +202,7 @@ h1, h2, p { margin-top: 0; }
   .auth-content { min-height: 100vh; min-height: 100svh; padding: 23px 28px 23px; }
   .auth-content-top { justify-content: space-between; }
   .mobile-brand { display: inline-flex; font-size: 25px; }
+  .mobile-brand .brand-mark { width: 32px; height: 32px; padding: 0; margin-inline-end: 8px; }
   .back-link { font-size: 11px; gap: 10px; }
   .auth-form-frame { padding-block: 45px 48px; }
   .auth-steps { margin-bottom: 33px; }

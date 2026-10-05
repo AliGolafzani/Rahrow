@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import { DocumentLink } from './DocumentLink';
+
+function BrandMark() {
+  return <Image src="/brand/rahrow-symbol.png" width={44} height={44}
+    className="brand-mark" alt="" aria-hidden="true" unoptimized />;
+}
 
 export function AuthShell({ children }: Readonly<{ children: ReactNode }>) {
   return <main className="auth-layout" dir="rtl">
     <aside className="auth-editorial" aria-label="ورود به راهرو">
-      <DocumentLink href="/" className="brand-placement brand-placement-light" aria-label="راهرو، صفحه نخست">راهرو</DocumentLink>
+      <DocumentLink href="/" className="brand-placement brand-placement-light" aria-label="راهرو، صفحه نخست"><BrandMark />راهرو</DocumentLink>
       <div className="editorial-copy">
         <p className="eyebrow">ادامهٔ مسیر</p>
         <h2>قدم بعدی،<br /><span>از اینجا.</span></h2>
@@ -13,7 +19,7 @@ export function AuthShell({ children }: Readonly<{ children: ReactNode }>) {
       <div className="editorial-wayfinding" aria-hidden="true"><span>راهرو</span><span className="wayfinding-line" /><span>۰۱</span></div>
     </aside>
     <section className="auth-content" aria-label="ورود و ثبت‌نام">
-      <div className="auth-content-top"><span className="mobile-brand brand-placement">راهرو</span>
+      <div className="auth-content-top"><span className="mobile-brand brand-placement"><BrandMark />راهرو</span>
         <DocumentLink href="/" className="back-link">بازگشت به صفحه نخست <span aria-hidden="true">↖</span></DocumentLink>
       </div>
       <div className="auth-form-frame">{children}</div>

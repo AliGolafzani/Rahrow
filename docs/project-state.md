@@ -4,6 +4,17 @@ Snapshot date: 2026-10-05. This document describes verified work and dependencie
 
 ## CURRENT MILESTONE
 
+**AUTH-03 — User Web Authentication Experience: PARTIAL; approved canonical logo integrated locally for the authorized bounded PR #4 update. Fresh exact-head CI and final human visual/accessibility acceptance remain required. PR must remain draft; no merge or deployment is authorized.**
+
+- The palette-corrected transparent symbol approved by Ali on 2026-10-05 is included byte-for-byte at `apps/web/public/brand/rahrow-symbol.png` (SHA-256 `5c058b84e5aec8358ba6f0977d882c2cbf7bec84b89b176561483b6865f7cb24`). It appears beside the existing accessible brand text in the desktop and mobile authentication header. Empty alt text and `aria-hidden` prevent duplicate announcements. The desktop cream backing preserves navy-on-navy visibility without modifying the asset.
+- The integration preserves authentication behavior, layout breakpoints, keyboard order, focus styles and reduced-motion rules. Backend, contracts, dependencies, schema, migrations and CI privacy controls are unchanged. Existing responsive keyboard scenarios now also check the logo source, loading, proportions and decorative semantics; a unit test locks the approved asset bytes.
+- The preceding head `807745d8ead61c9beaa6925f7f01f3d0cb5bedbb` passed the technical gates in [run 37318729387](https://github.com/AliGolafzani/Rahrow/actions/runs/37318729387). Those results do not establish acceptance of this new delta; fresh exact-head CI is required after the authorized one-commit publication.
+- Manual mobile/tablet/desktop visual review, requested screenshots and actual assistive-technology acceptance remain unavailable in this executor. A fresh sandbox-enabled Chromium launch still fails with socket `EPERM`; no security relaxation or alternate access workaround was used. No actual screen-reader pass is claimed. The preserved browser suite will exercise keyboard and reduced-motion assertions in CI, but does not replace final human acceptance.
+
+## AUTH-03 PRE-PUBLICATION HISTORY
+
+The following frozen author snapshot is historical; the current milestone above supersedes its asset availability and publication-authority statements.
+
 **AUTH-03 — User Web Authentication Experience: PARTIAL; local implementation and author offline/HTTP checks passed, browser/live/visual acceptance and independent review remain pending. No publication authorized.** Ali approved the implementation plan, final board palette and active-challenge resend UX on 2026-10-05. Remote main and cloned origin/main were independently verified as exact `f767de2ac08ed8e09ced3961c1c256a305858960` before creating local branch `auth-03-web-auth-experience`.
 
 - Scope: unified Persian mobile/OTP UI, strict same-origin forwarding of existing AUTH-02 operations, direct server session resolution, canonical permitted return routing, no-store private surfaces, minimal protected dashboard and logout. No backend guard/rate-limit/schema/migration change or future product expansion.

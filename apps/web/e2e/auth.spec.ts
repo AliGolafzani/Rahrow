@@ -299,6 +299,16 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 768, height: 1024 
     await expect(page.locator('html')).toHaveAttribute('lang', 'fa');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(mobileField(page)).toBeVisible();
+    const brand = page.locator(viewport.width >= 1024 ? '.auth-editorial .brand-mark' : '.mobile-brand .brand-mark');
+    await expect(brand).toBeVisible();
+    await expect(brand).toHaveAttribute('alt', '');
+    await expect(brand).toHaveAttribute('aria-hidden', 'true');
+    await expect(brand).toHaveAttribute('src', '/brand/rahrow-symbol.png');
+    await expect.poll(() => brand.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBe(1114);
+    expect(await brand.evaluate(element => {
+      const { width, height } = element.getBoundingClientRect();
+      return width === height && width >= 32;
+    })).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expectReducedMotion(page);
 
