@@ -4,7 +4,7 @@ This is the canonical register for PRODUCT OPEN QUESTIONS. Ali is Product Owner 
 
 Use exactly `OPEN`, `DECIDED`, or `SUPERSEDED` for Status. Keep IDs stable. Record Ali’s actual decision, its date, and source when decided; preserve history and reference a replacement when superseded. Do not infer an answer from examples, planned architecture, an ADR, or silence.
 
-Only the listed affected scope is blocked by each unresolved question, once implementation is authorized. Independent authorized work can continue. The governance-only task does not authorize implementation.
+Only the listed affected scope is blocked by each unresolved question, once implementation is authorized. Independent authorized work can continue. This register alone does not authorize implementation.
 
 ## Sources and coverage
 
@@ -22,6 +22,12 @@ The six product topics explicitly listed in PRD §20 map as follows:
 The first three are consolidated with their expanded product questions from the accepted report so one decision does not have competing records. The report supplies 22 product subquestions; the three other explicit PRD topics bring the total to 25.
 
 PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-provider contracts, and production hosting/topology. These are TECHNICAL DECISIONS, tracked in `project-state.md` and documented in ADRs only when material. They are intentionally absent from this product register. IMPLEMENTATION DETAILS belong in neither register. Escalate only an actual product tradeoff rather than relabeling an entire technical topic.
+
+## Settled AUTH-03 product decisions (2026-10-05)
+
+Ali's approved AUTH-03 requirements and subsequent active-challenge decision preserve the existing register: OQ-07 is DECIDED and OQ-14A/OQ-14D remain OPEN. Unified OTP authentication does not require email/profile completion and reaches the minimal dashboard. Success returns to the originally intended permitted internal destination, otherwise `/dashboard`; unsafe or unauthorized targets use that fallback.
+
+Successful resend selects the new active challenge only in the current page. There is no previous-challenge selector or “use previous code” action. Failed resend retains the current challenge. Older unexpired backend challenges remain independent and may still succeed in another tab/device with that context; the frontend must not invalidate or consume them. This records a frontend UX decision, not a change to AUTH-02 semantics. The final approved brand palette is Navy `#0E3556`, Orange `#F26722`, Cream `#FBF6EB`; exact canonical-logo integration remains an asset dependency, not a new authentication question.
 
 ## Register
 
@@ -338,3 +344,12 @@ PRD §20 also lists payment-provider/callback/settlement, object-storage/SMS-pro
 - **Decision:** Not decided.
 - **Decision date:** Not set.
 - **Source:** PRD §14; Ali's AUTH-01 plan approval and binding refinement 1, 2026-10-03. Related: OQ-14A.
+
+## AUTH-03 approved mobile-entry correction
+
+- **Owner:** Ali (Product Owner)
+- **Status:** DECIDED
+- **Decision date:** 2026-10-06
+- **Source:** Ali's approved AUTH-03 Iranian mobile input correction and implementation authorization.
+- **Affected scope:** Ordinary-user AUTH-03 frontend mobile entry only.
+- **Decision:** Trim surrounding whitespace only. Accept exactly 11 ASCII digits beginning with `09`, converting them to `+98` plus the input without its initial zero. Continue accepting the existing canonical E.164 ASCII contract unchanged, including non-Iranian numbers. Reject internal spaces, punctuation, wrong local prefixes/lengths and Persian/Arabic digits without conversion. Requests, active challenges and resend targets remain canonical; backend validation and independent-challenge semantics are unchanged. Use local Iranian example copy and a bounded input that accommodates surrounding whitespace. Human visual/accessibility acceptance remains required; no merge is authorized.

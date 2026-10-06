@@ -177,6 +177,14 @@ jobs:
           test "$current" = "$(cat "$RUNNER_TEMP/cluster-id")"
           node apps/api/scripts/check-database.ts --expect-snapshot "$RUNNER_TEMP/auth-migration-snapshot.json"
           node apps/api/scripts/check-auth-flow-database.ts --expect-snapshot "$RUNNER_TEMP/auth-flow-snapshot.json"
+      - name: Build the separate Next application for browser acceptance
+        run: npm run build:web
+      - name: Install pinned Playwright Chromium
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Check AUTH-03 browser flows against actual Nest and owned PostgreSQL
+        env:
+          RAHROW_AUTH_DATABASE_TESTS: disposable-local-ci
+        run: npm run test:web:e2e
       - name: Independently verify retained-empty Foundation migration path
         run: |
           # The direct-fresh path above completed. Reuse only this proven-owned disposable namespace.

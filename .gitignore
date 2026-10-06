@@ -11,3 +11,8 @@ coverage/
 
 # Reproducible, local-only Prisma tooling output
 /apps/api/src/generated/prisma/
+
+# Local browser acceptance output (never retain OTP traces/video)
+.auth-browser-results/
+playwright-report/
+test-results/

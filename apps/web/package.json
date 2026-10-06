@@ -4,14 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 3000",
-    "build": "next build",
+    "build": "npm run prepare:types && next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "npm run prepare:types && next typegen && tsc --noEmit",
+    "prepare:types": "npm run build --workspace @rahrow/contracts",
+    "predev": "npm run prepare:types"
   },
   "dependencies": {
     "next": "16.3.8",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "@rahrow/contracts": "0.0.0"
   },
   "devDependencies": {
     "@rahrow/config": "0.0.0",
