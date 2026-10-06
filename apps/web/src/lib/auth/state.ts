@@ -13,6 +13,14 @@ export function isCanonicalMobile(value: unknown): value is string {
   return typeof value === 'string' && /^\+[1-9][0-9]{0,14}$/.test(value);
 }
 
+/** UI convenience only; API validation continues to require canonical E.164. */
+export function normalizeMobileInput(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (/^09[0-9]{9}$/.test(trimmed)) return `+98${trimmed.slice(1)}`;
+  return isCanonicalMobile(trimmed) ? trimmed : null;
+}
+
 export function isOtpCode(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9]{6}$/.test(value);
 }

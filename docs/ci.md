@@ -115,7 +115,7 @@ Docker/DB is **BLOCKED** for live acceptance, not a reason to install a daemon,
 relax the guard, skip the gate, or claim completion. Both commands require a separately
 built Next app and compiled API; browser readiness never launches a development server.
 
-The browser suite contains 27 explicit scenarios (including three viewport cases):
+The preserved browser baseline contains 27 explicit scenarios (including three viewport cases):
 guest/unknown navigation, protected entry through OTP, established-session entry,
 strict returns, exact mobile/OTP input, invalid/expired/exhausted/consumed outcomes,
 newest-only resend and older-context success in another browser context, failed resend,
@@ -129,3 +129,10 @@ Six additional Node tests cover fixture construction/default safeguards, all fiv
 Nest endpoints without reveal routes, built Next dispatch/SSR/redirect/no-store/cookie
 boundaries against that fixture, and artifact privacy. These are contract/tooling checks
 in the normal aggregate, separately reported from the guarded PostgreSQL browser suite.
+
+The approved 2026-10-06 Iranian-mobile correction adds six scenarios (33 total):
+local `09` input through canonical request/challenge/resend/verification and safe completion;
+unchanged Iranian and non-Iranian canonical input; whitespace around local input and
+maximum-length canonical input without truncation; and local rejection of malformed
+or non-ASCII input with neutral copy and no OTP request. All 27 baseline scenarios
+remain unchanged. Fresh exact-head execution is required; collection alone is not a pass.

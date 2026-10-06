@@ -1,8 +1,17 @@
 # Rahrow project state
 
-Snapshot date: 2026-10-05. This document describes verified work and dependencies, not completion of requirements merely listed in the PRD.
+Snapshot date: 2026-10-06. This document describes verified work and dependencies, not completion of requirements merely listed in the PRD.
 
 ## CURRENT MILESTONE
+
+**AUTH-03 — User Web Authentication Experience: PARTIAL; approved Iranian mobile-entry correction implemented locally for PR #4. Independent frozen-diff review, correction publication and fresh exact-head CI remain pending at this snapshot. Final human visual/accessibility acceptance is still required. PR stays draft; no merge or deployment is authorized.**
+
+- Ali approved the bounded product correction on 2026-10-06, recorded in [the product decisions](open-questions.md#auth-03-approved-mobile-entry-correction). The frontend trims surrounding whitespace, accepts ASCII `09` plus nine digits and submits canonical `+98` plus the number without its leading zero; existing canonical E.164 input remains unchanged. Internal spacing/punctuation, wrong local formats and Persian/Arabic digits are rejected without conversion. API validation remains canonical-only, including challenge/resend/verification targets.
+- Local-example Persian help/error copy and a bounded 64-character input support Iranian entry and whitespace-padded paste. Backend, contracts, schema/migrations, rates, cookies, CSRF, sessions, providers, dependencies and CI workflow remain unchanged. No temporary preview helper is included.
+- Local verification PASS on Node 24.19.0/npm 11.9.0: clean `npm ci`, `npm ls --all`, Prisma validate/generate and full `npm run check` (lint, all typechecks/builds, OpenAPI freshness and 151 automated tests: 81 baseline plus 70 web/fixture/HTTP tests, zero failures/skips). Runtime audit is zero; full audit retains the same nine high development findings. Nine focused automated regressions and six additive browser scenarios cover the new contract; all 27 pre-existing browser scenarios are preserved byte-for-byte. Browser collection is not execution. Fresh sandbox-enabled Chromium startup fails before page load with socket `EPERM`; no security relaxation was attempted. Docker/PostgreSQL are unavailable here, so live AUTH-01/AUTH-02/browser and retained-empty/cleanup acceptance require fresh CI after publication.
+- Ali must retry the real local page after fresh CI. This correction does not satisfy the remaining human visual/accessibility gate.
+
+## PRECEDING CANONICAL LOGO UPDATE
 
 **AUTH-03 — User Web Authentication Experience: PARTIAL; approved canonical logo integrated locally for the authorized bounded PR #4 update. Fresh exact-head CI and final human visual/accessibility acceptance remain required. PR must remain draft; no merge or deployment is authorized.**
 

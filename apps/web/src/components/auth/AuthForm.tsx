@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { requestOtp, verifyOtp } from '../../lib/auth/client';
 import { authErrorMessage, type AuthFailure } from '../../lib/auth/errors';
-import { activeChallenge, completeAuthPath, isCanonicalMobile, isOtpCode, remainingSeconds, verificationNeedsSessionResolution, type ActiveChallenge } from '../../lib/auth/state';
+import { activeChallenge, completeAuthPath, normalizeMobileInput, isOtpCode, remainingSeconds, verificationNeedsSessionResolution, type ActiveChallenge } from '../../lib/auth/state';
 import { useAuth } from './AuthProvider';
 
 type PendingAction = 'request' | 'resend' | 'verify' | 'resolve' | null;
@@ -101,9 +101,9 @@ export function AuthForm({ returnTo }: Readonly<{ returnTo: string }>) {
 
   async function sendCode(resend: boolean) {
     if (remainingSeconds(Math.max(retryAt, challenge?.retryAt ?? 0), Date.now()) > 0) return;
-    const targetMobile = resend && challenge ? challenge.mobile : mobile;
-    if (!isCanonicalMobile(targetMobile)) {
-      setError('شماره را با + و کد کشور، با اعداد انگلیسی وارد کنید؛ حداکثر ۱۵ رقم.');
+    const targetMobile = resend && challenge ? challenge.mobile : normalizeMobileInput(mobile);
+    if (targetMobile === null) {
+      setError('شماره همراه معتبر وارد کنید؛ مثلاً 09121234567، با اعداد انگلیسی.');
       setInvalidField('mobile');
       mobileInput.current?.focus();
       return;
@@ -227,11 +227,11 @@ export function AuthForm({ returnTo }: Readonly<{ returnTo: string }>) {
       {!challenge ? <div className="form-field">
         <label htmlFor={`${prefix}-mobile`}>شماره همراه</label>
         <input ref={mobileInput} id={`${prefix}-mobile`} name="mobile" type="tel" inputMode="tel" dir="ltr"
-          autoComplete="tel" placeholder="+989121234567" maxLength={16} required value={mobile}
+          autoComplete="tel" placeholder="09121234567" maxLength={64} required value={mobile}
           disabled={pending !== null} aria-invalid={invalidField === 'mobile'}
           aria-describedby={`${prefix}-mobile-help${invalidField === 'mobile' ? ` ${prefix}-error` : ''}`}
           onChange={event => { setMobile(event.target.value); setInvalidField(null); setError(null); }} />
-        <p id={`${prefix}-mobile-help`} className="field-hint">با + و کد کشور، بدون فاصله؛ فقط اعداد انگلیسی</p>
+        <p id={`${prefix}-mobile-help`} className="field-hint">شماره همراهتان را وارد کنید؛ مثلاً 09121234567</p>
       </div> : <div className="form-field">
         <div className="field-label-row"><label htmlFor={`${prefix}-code`}>کد یک‌بارمصرف</label>
           <button className="text-button" type="button" onClick={changeMobile} disabled={pending !== null || needsSessionCheck}>تغییر شماره همراه</button>

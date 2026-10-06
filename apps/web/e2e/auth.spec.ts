@@ -540,3 +540,80 @@ test('valid unavailable verification response blocks another proof until session
   expect((await verifyCode(page, challenge.code)).status()).toBe(200);
   await expect(page).toHaveURL(/\/dashboard$/);
 });
+
+
+test('Iranian local mobile reaches canonical challenge, resend and safe login completion', async ({ page, auth }) => {
+  await page.clock.install();
+  await page.goto('/login?returnTo=https%3A%2F%2Fexample.invalid');
+  const canonical = '+989121234567';
+  const requestTargets: boolean[] = [];
+  let canonicalVerification = false;
+  page.on('request', request => {
+    if (request.url().endsWith('/api/v1/auth/otp/request')) {
+      requestTargets.push(request.postDataJSON().mobile === canonical);
+    }
+    if (request.url().endsWith('/api/v1/auth/otp/verify')) {
+      canonicalVerification = request.postDataJSON().mobile === canonical;
+    }
+  });
+  const first = await requestCode(page, auth, '09121234567');
+  expect(requestTargets.length === 1 && requestTargets.every(Boolean)).toBe(true);
+  expect(await page.locator('.mobile-value').textContent() === canonical).toBe(true);
+  await expect(page.getByRole('status').filter({ hasText: 'کد ورود ارسال شد.' })).toBeVisible();
+  await allowResend(page, auth);
+  const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/v1/auth/otp/request'));
+  await resendButton(page).click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(202);
+  const latest = await response.json() as { challengeId: string };
+  expect(latest.challengeId !== first.challengeId).toBe(true);
+  expect(requestTargets.length === 2 && requestTargets.every(Boolean)).toBe(true);
+  expect((await verifyCode(page, auth.codeFor(latest.challengeId))).status()).toBe(200);
+  expect(canonicalVerification).toBe(true);
+  await expect(page).toHaveURL('http://127.0.0.1:3100/dashboard');
+  await expect(logoutButton(page)).toBeVisible();
+});
+
+const mobileEntryCases = [
+  { name: 'Iranian canonical', input: '+989121234567', canonical: '+989121234567' },
+  { name: 'non-Iranian canonical', input: '+12025550123', canonical: '+12025550123' },
+  { name: 'local surrounding whitespace', input: '  09121234567  ', canonical: '+989121234567' },
+  { name: 'maximum canonical with surrounding whitespace', input: '  +123456789012345  ', canonical: '+123456789012345' },
+];
+for (const entry of mobileEntryCases) {
+  test(`mobile entry accepts ${entry.name} with canonical API target`, async ({ page, auth }) => {
+    await page.goto('/login');
+    await expect(mobileField(page)).toHaveAttribute('maxlength', '64');
+    await expect(mobileField(page)).toHaveAttribute('placeholder', '09121234567');
+    let canonicalRequest = false;
+    page.on('request', request => {
+      if (request.url().endsWith('/api/v1/auth/otp/request')) {
+        canonicalRequest = request.postDataJSON().mobile === entry.canonical;
+      }
+    });
+    await requestCode(page, auth, entry.input);
+    expect(canonicalRequest).toBe(true);
+    expect(await page.locator('.mobile-value').textContent() === entry.canonical).toBe(true);
+  });
+}
+
+test('invalid mobile entry stays local with neutral error and no account disclosure', async ({ page, auth }) => {
+  void auth;
+  await page.goto('/login');
+  let requests = 0;
+  page.on('request', request => {
+    if (request.url().endsWith('/api/v1/auth/otp/request')) requests += 1;
+  });
+  const error = 'شماره همراه معتبر وارد کنید؛ مثلاً 09121234567، با اعداد انگلیسی.';
+  for (const input of ['0912 1234567', '+98 9121234567', '0912-1234567', '(0912)1234567',
+    '0912123456', '091212345678', '08121234567', '9121234567',
+    '۰۹۱۲۱۲۳۴۵۶۷', '٠٩١٢١٢٣٤٥٦٧', '+۹۸۹۱۲۱۲۳۴۵۶۷', '+٩٨٩١٢١٢٣٤٥٦٧']) {
+    await mobileField(page).fill(input);
+    await sendButton(page).click();
+    await expect(mobileField(page)).toBeFocused();
+    await expect(mobileField(page)).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('.auth-form form').getByRole('alert')).toHaveText(error);
+    await expect(codeField(page)).toHaveCount(0);
+  }
+  expect(requests).toBe(0);
+});

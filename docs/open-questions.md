@@ -344,3 +344,12 @@ Successful resend selects the new active challenge only in the current page. The
 - **Decision:** Not decided.
 - **Decision date:** Not set.
 - **Source:** PRD §14; Ali's AUTH-01 plan approval and binding refinement 1, 2026-10-03. Related: OQ-14A.
+
+## AUTH-03 approved mobile-entry correction
+
+- **Owner:** Ali (Product Owner)
+- **Status:** DECIDED
+- **Decision date:** 2026-10-06
+- **Source:** Ali's approved AUTH-03 Iranian mobile input correction and implementation authorization.
+- **Affected scope:** Ordinary-user AUTH-03 frontend mobile entry only.
+- **Decision:** Trim surrounding whitespace only. Accept exactly 11 ASCII digits beginning with `09`, converting them to `+98` plus the input without its initial zero. Continue accepting the existing canonical E.164 ASCII contract unchanged, including non-Iranian numbers. Reject internal spaces, punctuation, wrong local prefixes/lengths and Persian/Arabic digits without conversion. Requests, active challenges and resend targets remain canonical; backend validation and independent-challenge semantics are unchanged. Use local Iranian example copy and a bounded input that accommodates surrounding whitespace. Human visual/accessibility acceptance remains required; no merge is authorized.
